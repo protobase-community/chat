@@ -1,12 +1,13 @@
 import { defineConfig } from '@protobase/config'
 
-// The whole app, as one object; it grows as the app does. Its resources are found in config/. Its address and secret
+// The whole app, as one object. Its resources are in config/ and its roles in config/roles.ts; its address and secret
 // are Protobase's defaults, PROTOBASE_URL and PROTOBASE_SECRET (see .env.example).
 export default defineConfig({
+  name: 'Chat',
   auth: {
-    // No defaultRole on purpose: every account is created with an explicit role (`protobase users create --role`).
-    roles: ['admin'],
+    // `admin` is the superuser, in every workspace; `participant` is held per workspace, given with each invitation.
+    roles: { admin: 'Superuser', participant: 'Participant' },
+    // A workspace is an organization: people join one by invitation and see only its channels and messages.
+    organizations: { create: 'everyone' },
   },
-  // Every user works in tenant 1, which access rules can compare with an organization_id column.
-  authenticate: { tenant: 1 },
 })

@@ -1,4 +1,7 @@
-// Every resource, view and page of the app, exported from here: `export * from './orders/data'`. A new app has no
-// resources yet, only the Users page, for admins; it is deployed with its first change.
+// Every resource, view and page of the app, exported from here. Roles are found in config/roles.ts.
 export { usersPage } from '@protobase/layout'
+export * from './channels/data'
+export * from './channels/ui'
+export * from './messages/data'
+export * from './messages/ui'
 export { accountMenu } from './user-menu'
