@@ -72,7 +72,7 @@ GitHub repository**. Protobase keeps the app in sync with the repository and dep
 `config/<name>/data.ts` and its screens in `config/<name>/ui.ts`, all exported from `config/index.ts`, and
 `protobase dev` and `protobase serve` serve the API and the app from them.
 
-- Tested with Protobase **0.46.12**: the `@protobase/*` packages are pinned to it in `package.json`, and CI runs
+- Tested with Protobase **0.53.5**: the `@protobase/*` packages are pinned to it in `package.json`, and CI runs
   against it. To upgrade, set the new version on each `@protobase/*` package, run `bun install`, then
   `bun run typecheck`, `bun run test` and `bun run build`. The [release notes](https://github.com/PrototeamHQ/protobase/releases) say what changed.
 - Docs: [docs.protobase.net](https://docs.protobase.net). Source and issues: [PrototeamHQ/protobase](https://github.com/PrototeamHQ/protobase).
