@@ -1,7 +1,7 @@
 {
   "name": "chat",
   "version": "0.0.0",
-  "description": "A team chat app built on Protobase, modelled on Slack and Teams with elements of WhatsApp and Discord",
+  "description": "A team chat app built on Protobase: workspaces, channels, live messages and @mentions",
   "private": true,
   "license": "Apache-2.0",
   "repository": {
