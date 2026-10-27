@@ -1,13 +1,13 @@
 # Working on this app
 
 A Protobase app: each resource's data config in `config/<name>/data.ts` and its screens in `config/<name>/ui.ts`, all
-exported from `config/index.ts`, over a Postgres database. Reference: https://docs.protobase.net. It starts empty: the
-first change adds its first tables and resources.
+exported from `config/index.ts`, over a Postgres database. Reference: https://docs.protobase.net. Its resources are a
+team chat's channels and messages.
 
 ## Database changes
 
-- Every schema change is a new migration file in `db/migrations/`, numbered after the last one (`007_customers.sql`
-  after the auth migrations). Never edit or remove a migration that exists: it has already run on the live database.
+- Every schema change is a new migration file in `db/migrations/`, numbered after the last one (`010_reactions.sql`
+  after `009_changes.sql`). Never edit or remove a migration that exists: it has already run on the live database.
 - Expand only, where possible: add tables, columns and indexes, and keep what the running app still reads. Rename or
   drop only when asked to, once nothing uses it.
 
