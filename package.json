@@ -1,12 +1,12 @@
 {
-  "name": "starter",
+  "name": "chat",
   "version": "0.0.0",
-  "description": "An empty Protobase app to start from: auth, migrations and an empty config",
+  "description": "A team chat app built on Protobase, modelled on Slack and Teams with elements of WhatsApp and Discord",
   "private": true,
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/protobase-community/starter.git"
+    "url": "git+https://github.com/protobase-community/chat.git"
   },
   "type": "module",
   "engines": {
@@ -15,22 +15,16 @@
   "scripts": {
     "db:up": "test -f .env || cp .env.example .env; docker compose up -d --wait",
     "db:down": "docker compose down",
-    "db:migrate": "bun db/migrate.ts",
-    "doctor": "bun db/doctor.ts",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run",
+    "db:migrate": "protobase run db/migrate.ts",
+    "doctor": "protobase run db/doctor.ts",
+    "typecheck": "protobase types && tsc --noEmit",
+    "test": "protobase types && vitest run",
     "protobase": "protobase",
     "build": "protobase build",
     "serve": "protobase build && protobase serve dist",
     "dev": "protobase dev"
   },
   "dependencies": {
-    "@protobase/cli": "~0.53.5",
-    "@protobase/config": "~0.53.5",
-    "@protobase/layout": "~0.53.5",
-    "@protobase/schema": "~0.53.5",
-    "@protobase/server": "~0.53.5",
-    "@protobase/ui": "~0.53.5",
     "better-auth": "^1.7.12",
     "jose": "^6.2.12",
     "kysely": "^0.29.6",
@@ -39,6 +33,12 @@
     "react": "^19.3.0"
   },
   "devDependencies": {
+    "@protobase/cli": "^0.53.8",
+    "@protobase/config": "^0.53.8",
+    "@protobase/layout": "^0.53.8",
+    "@protobase/schema": "^0.53.8",
+    "@protobase/server": "^0.53.8",
+    "@protobase/ui": "^0.53.8",
     "@types/node": "^22.20.5",
     "@types/pg": "^8.23.1",
     "@types/react": "^19.3.0",
