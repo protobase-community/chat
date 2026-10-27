@@ -16,6 +16,7 @@
     "db:up": "test -f .env || cp .env.example .env; docker compose up -d --wait",
     "db:down": "docker compose down",
     "db:migrate": "protobase run db/migrate.ts",
+    "seed": "protobase run seed/cli.ts",
     "doctor": "protobase run db/doctor.ts",
     "typecheck": "protobase types && tsc --noEmit",
     "test": "protobase types && vitest run",

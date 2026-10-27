@@ -10,4 +10,7 @@ export default defineConfig({
     // A workspace is an organization: people join one by invitation and see only its channels and messages.
     organizations: { create: 'everyone' },
   },
+  // No PostgREST-compatible API: it runs under the tables' row-level security, which these tables do not have, rather
+  // than the resources' access rules, so a key set in the environment must not turn it on.
+  apiKeys: false,
 })

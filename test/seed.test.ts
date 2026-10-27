@@ -1,0 +1,57 @@
+import { loadProjectAuth } from '@protobase/cli/auth'
+import { createUser } from '@protobase/server'
+import postgres from 'postgres'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { seedDemoWorkspace } from '../seed/demo-workspace'
+import { messages, people } from '../seed/demo-data'
+import { root, throwawayDatabase } from './chat-server'
+
+// The demo seed against Postgres: what it writes, and that running it again doubles nothing.
+
+let database: Awaited<ReturnType<typeof throwawayDatabase>>
+let sql: postgres.Sql
+
+beforeAll(async () => {
+  database = await throwawayDatabase()
+  process.env.DATABASE_URL = database.databaseUrl
+  sql = postgres(database.databaseUrl, { max: 1, onnotice: () => {} })
+}, 120_000)
+
+afterAll(async () => {
+  await sql?.end()
+  await database?.drop()
+})
+
+const counts = async () => {
+  const [row] = await sql`
+    select (select count(*)::int from auth."user") as users, (select count(*)::int from auth.organization) as workspaces,
+      (select count(*)::int from auth.member) as members, (select count(*)::int from public.channels) as channels,
+      (select count(*)::int from public.messages) as messages`
+  return row
+}
+
+describe('the demo seed', () => {
+  it('waits for the developer’s own account, so no demo person becomes a superuser', async () => {
+    const auth = await loadProjectAuth(root)
+    await expect(seedDemoWorkspace(auth, sql, new Date())).rejects.toThrow(/Create your own account first/)
+  })
+
+  it('writes a workspace with #general and #random, three people and their conversation, once', async () => {
+    const auth = await loadProjectAuth(root)
+    await createUser(auth, { email: 'dev@example.com', role: 'admin' })
+    const created = await seedDemoWorkspace(auth, sql, new Date())
+    expect(created.map((person) => person.email)).toEqual(Object.values(people).map((person) => person.email))
+    const first = await counts()
+    expect(first).toEqual({ users: 4, workspaces: 1, members: 3, channels: 2, messages: messages.length })
+
+    expect(await seedDemoWorkspace(auth, sql, new Date())).toEqual([])
+    expect(await counts()).toEqual(first)
+  })
+
+  it('stores each mention as the id of the person named', async () => {
+    const [row] = await sql<{ mentions: string[]; name: string }[]>`
+      select m.mentions, u.name from public.messages m join auth."user" u on u.id = m.mentions ->> 0
+      where m.body like '@Sam Okafor%'`
+    expect(row).toEqual({ mentions: [expect.any(String)], name: 'Sam Okafor' })
+  })
+})
