@@ -14,7 +14,7 @@ const mine = (ctx: AccessContext) => where.eq('author_id', ctx.user!.id!)
 /**
  * public.messages: what people say in a channel or a direct message, exactly one of them. A message is posted into, and
  * read in, only a conversation its reader may read, so a private one's messages stay with its members. Only its author,
- * the superuser too, edits or deletes it, and it stays in its conversation.
+ * the superuser too, edits or deletes it, and it stays in its conversation. Its files are its attachments.
  */
 export const messages = resource('messages')
   .table('messages')
@@ -24,7 +24,8 @@ export const messages = resource('messages')
     channel_id: f.relation('channels').optional().filterable().access({ update: () => false }),
     direct_message_id: f.relation('direct_messages').optional().filterable().access({ update: () => false }),
     author_id: f.text().readOnly().filterable(),
-    body: f.text().min(1).max(10_000),
+    // Null for a message of files alone; the database refuses a message with neither text nor files.
+    body: f.text().min(1).max(10_000).optional(),
     // The user ids of the people the message mentions, as the composer gives them: a JSON array, `[]` for none.
     mentions: f.json().filterable(),
     sent_at: f.timestamp().readOnly().dbDefault(),

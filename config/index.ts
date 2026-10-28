@@ -1,5 +1,7 @@
 // Every resource, view, page and subscription of the app, exported from here. Roles are found in config/roles.ts.
 export { usersPage } from '@protobase/layout'
+export * from './attachments/data'
+export * from './attachments/ui'
 export * from './channels/data'
 export * from './channels/ui'
 export * from './direct_messages/data'
