@@ -31,4 +31,6 @@ export const messages = resource('messages')
   .parent((r) => r.direct_message_id, 'read')
   .validate((message) => ((message.channel_id == null) === (message.direct_message_id == null) ? [{ field: 'channel_id', message: 'Post a message into a channel or a direct message, one of them' }] : undefined))
   .validate((message) => (mentionIds(message.mentions) ? undefined : [{ field: 'mentions', message: `Mention at most ${maxMentions} people, by their user ids` }]))
+  // messages.created, which config/messages/notify.ts tells the people it mentions or writes to of.
+  .events((e) => [e.created()])
   .live()

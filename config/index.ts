@@ -1,4 +1,4 @@
-// Every resource, view and page of the app, exported from here. Roles are found in config/roles.ts.
+// Every resource, view, page and subscription of the app, exported from here. Roles are found in config/roles.ts.
 export { usersPage } from '@protobase/layout'
 export * from './channels/data'
 export * from './channels/ui'
@@ -6,6 +6,7 @@ export * from './direct_messages/data'
 export * from './direct_messages/ui'
 export * from './messages/data'
 export * from './messages/ui'
+export { notifyOfMessages } from './messages/notify'
 export * from './read_positions/data'
 export * from './read_positions/ui'
 export { accountMenu } from './user-menu'
