@@ -1,8 +1,9 @@
 # Chat
 
 A team chat app built on Protobase: a team signs in to its workspace, talks in channels, private channels and direct
-messages, and sees each other's messages arrive live, with @mentions. Start from it for a chat of your own, or read it to see how Protobase builds one:
-everything below is Protobase's own features, with no server code of the app's own.
+messages, and sees each other's messages arrive live, with @mentions and notifications of them. Start from it for a chat of your own, or read it to see how Protobase builds one:
+everything below is Protobase's own features, with one piece of server code of the app's own, the subscription that
+notifies people of messages.
 
 ## Run it locally
 
@@ -25,6 +26,23 @@ It runs again without doubling anything, and needs your own account first, since
 superuser. Set your
 own `PROTOBASE_SECRET` in `.env` (`openssl rand -base64 32`). `bun run db:down` stops the database.
 
+Mention Sam as Maya, or write to Maya as Sam, and the other sees it in the bell in the top bar within a few seconds.
+For push to the browser too, generate the Web Push keys and put them in `.env`, with an address push services can reach
+you at, then start `bun run dev` again and press **Turn on** in the bell:
+
+```sh
+bun run protobase notifications vapid-keys   # prints PROTOBASE_VAPID_PUBLIC_KEY and PROTOBASE_VAPID_PRIVATE_KEY
+```
+
+```sh
+PROTOBASE_VAPID_PUBLIC_KEY=...
+PROTOBASE_VAPID_PRIVATE_KEY=...
+PROTOBASE_VAPID_SUBJECT=mailto:you@example.com
+```
+
+Keep the private key out of the repository: anyone holding it can push to every subscribed browser. Without the keys
+the bell still shows the notifications, and browsers get no push.
+
 Check a change with `bun run typecheck`, `bun run test`, `bun run build` and, after `bun run db:migrate`,
 `bun run doctor`, as CI does. The tests in `test/` make a database of their own on `DATABASE_URL`'s server and run the
 app on it with `protobase dev`.
@@ -46,7 +64,7 @@ app on it with `protobase dev`.
 | Starting a direct message with the same people again opens the one they have | Next: the first follow-up |
 | Unread conversations in bold in the sidebar, with a count of unread mentions, or of a direct message's unread messages, updated live | This version |
 | Opening a conversation on a "New messages" line above the first unread message | This version |
-| Notifications for mentions and direct messages | The third follow-up |
+| Notifications of mentions and direct messages in the bell and as browser push, opening the conversation | This version |
 | Editing, deleting and reacting to messages | The fourth follow-up |
 | Files and images | The fifth follow-up |
 | Threads | The sixth follow-up |
@@ -62,6 +80,12 @@ app on it with `protobase dev`.
 <gap>A conversation with more unread messages than one page of 50 cannot show its "New messages" line because opening on a message before the latest page is not implemented.</gap> It opens at the end, still bold in the sidebar until read there.
 
 <gap>Old messages of someone who has left the workspace cannot show their name because Protobase's lookup of former members is not implemented.</gap>
+
+<gap>Phones cannot get push from the chat's own Android and iOS app because Protobase's push to them is not implemented.</gap> A browser gets it, and on iPhone the chat added to the Home Screen.
+
+<gap>A conversation cannot be muted, nor a person's notifications paused, because notification settings are not implemented.</gap>
+
+<gap>Someone who has the conversation open still gets a notification of its new messages because telling whether it is in front of them is not implemented.</gap>
 
 ## How Protobase builds it
 
@@ -103,8 +127,8 @@ app on it with `protobase dev`.
   reader's place, goes to the end when they send (`followKey`) and offers earlier messages (`onLoadEarlier`);
   `ChatMessage` with the author, avatar, time and `continued` for a run of one person's messages; `ChatDivider` with
   `chatDayLabel` between messages that `sameChatDay` puts on different days; and `Composer`, whose `searchPeople` lists
-  the members to mention and whose `onSend(text, mentionIds)` gives the ids each message keeps in `mentions`, for the
-  unread and notification follow-ups. `components/` holds the pages' own code: paging and following a conversation's
+  the members to mention and whose `onSend(text, mentionIds)` gives the ids each message keeps in `mentions`, which the
+  unread counts and notifications read. `components/` holds the pages' own code: paging and following a conversation's
   messages (`use-conversation-messages.ts`), grouping them (`thread-rows.ts`) and drawing them
   (`conversation-chat.tsx`), on a channel's page (`channel-chat.tsx`) and a direct message's
   (`direct-message-chat.tsx`), exported from `protobase.ui.tsx`.
@@ -134,6 +158,17 @@ app on it with `protobase dev`.
   of a message or read position changed. A conversation's page reads its position on opening and draws
   `ChatDivider tone="new"` above the first message after it by someone else, which `ChatThread` opens on; its
   `onReadToEnd` moves the position to the newest message once the reader is at the end while the page shows.
+- **Notifications from the server.** `notifications: {}` in `protobase.config.ts` turns on Protobase's
+  [notifications](https://docs.protobase.net/reference/notifications/): the bell in the top bar, each person's inbox, and
+  push to the browsers they turn it on in through Web Push, with the tables `protobase migration` wrote
+  (`db/migrations/014_notifications.sql`). Messages declare `.events((e) => [e.created()])`, and the subscription
+  `notifyOfMessages` (`config/messages/notify.ts`, exported from `config/index.ts`) runs on the server for each
+  `messages.created`, whoever wrote it: it tells the people the message mentions and a direct message's other members
+  (`told-of.ts`), never its author, of a private channel or direct message only its members, and of those only the
+  workspace's members whose roles read messages, since a notification shows the message's start. It sends with
+  `sendNotification(db, { userIds, inbox: true }, ...)`, a background job, a notification that names the sender, the
+  channel or a direct message and the message's start, and links to the conversation's record page on `PROTOBASE_URL`
+  (`notification.ts`). The demo seed turns change capture off while it writes, so its past messages notify nobody.
 - **Records at their own address.** A channel is an ordinary record at `/channels/<id>` and a direct message at
   `/direct_messages/<id>`, each created with the standard form, so links and breadcrumbs work as for any record.
 - **The demo seed** (`seed/`) creates its people and workspace with Protobase's host functions (`createUser`,
