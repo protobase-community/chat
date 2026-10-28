@@ -71,7 +71,7 @@ app on it with `protobase dev`.
 | Notifications of mentions and direct messages in the bell and as browser push, opening the conversation | This version |
 | Editing and deleting one's own messages, "(edited)" under a changed one, both reaching others live | This version |
 | Reacting with an emoji of a small set: each reaction's count under the message, who reacted on hover, one's own highlighted, live | This version |
-| Files in messages, with or without text: images shown as previews, any other file as its name and size to download, at most 10 of up to 20 MB each | This version |
+| Files in messages, with or without text, picked with 📎, pasted, such as a screenshot, or dropped on the message box: images shown as previews, any other file as its name and size to download, at most 10 of up to 20 MB each | This version |
 | Replying in a thread, in a panel beside the conversation, with mentions and files: the conversation shows under a message its number of replies and when the last came, both live | This version |
 | Workspace moderators, its owners and the admins they pick, who delete anyone's message in a conversation they read, never edit it | This version |
 | Message search, presence and typing indicators | Later |
@@ -100,8 +100,6 @@ app on it with `protobase dev`.
 <gap>A deleted message's notification cannot be taken back from the bell because withdrawing a sent notification is not implemented.</gap>
 
 <gap>A message cannot be answered with any emoji outside the six of the set because an emoji picker is not implemented.</gap>
-
-<gap>A file cannot be pasted or dropped into the message box because taking files in Protobase's `Composer` is not implemented.</gap> The 📎 button beside it picks them, and **Send without text** sends them alone, since the box sends only text.
 
 <gap>A sent message's files cannot be added to or taken off because editing a message's files is not implemented.</gap> Deleting the message deletes them.
 
@@ -182,7 +180,7 @@ app on it with `protobase dev`.
 - **Files are records too.** `attachments` (`config/attachments/data.ts`) holds one file of a message in a
   [file field](https://docs.protobase.net/reference/files/), `f.file().maxSize(20_000_000)`, a text column holding the
   stored file's URI in Protobase's `private` storage, with `.derive()` writing an image's width and height, which the
-  chat gives the preview so the thread does not jump as it loads. The chat uploads each picked file at once
+  chat gives the preview so the thread does not jump as it loads. The chat uploads each file picked, pasted or dropped at once
   (`client.upload`, `components/use-attachment-uploads.ts`), checking the size first so a larger file is refused with
   its name, size and the limit, and sends the message and its files' upload tickets in one
   [batch write](https://docs.protobase.net/reference/api/#batch-writes) (`use-conversation-messages.ts`).
@@ -213,7 +211,10 @@ app on it with `protobase dev`.
   its own; `ChatDivider` with
   `chatDayLabel` between messages that `sameChatDay` puts on different days; and `Composer`, whose `searchPeople` lists
   the members to mention and whose `onSend(text, mentionIds)` gives the ids each message keeps in `mentions`, which the
-  unread counts and notifications read. `components/` holds the pages' own code: paging and following a conversation's
+  unread counts and notifications read. The composer takes files in its own slots (`conversation-composer.tsx`): the
+  📎 button in `actions`, the tray of pending files with their progress or refusal in `attachments`, `onFiles` for an
+  image pasted with no text, such as a screenshot, or files dropped on it, which join the picked ones, and
+  `canSendEmpty` once the files are uploaded, so Enter sends them without text. `components/` holds the pages' own code: paging and following a conversation's
   messages or a thread's replies, an edit read again and a delete taken out as the live stream tells of them
   (`use-conversation-messages.ts`),
   their reactions and files (`use-message-records.ts`), grouping them (`thread-rows.ts`) and drawing them
