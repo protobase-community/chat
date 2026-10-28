@@ -89,6 +89,16 @@ describe('a reply', () => {
     expect((await api(`/messages/${answer.id}`, { ...people.ben, 'if-match': '*' }, { method: 'PATCH', body: JSON.stringify({ thread_id: null }) })).status).toBe(400)
   })
 
+  it('works in a direct message as in a channel, kept to its members', async () => {
+    const between = await created(await api('/direct_messages', people.ana, { method: 'POST', body: JSON.stringify({ member_ids: [ids.ben] }) }))
+    const first = await created(await post('ana', { direct_message_id: between.id, body: 'Coffee?', mentions: [] }))
+    const answer = await created(await post('ben', { direct_message_id: between.id, thread_id: first.id, body: 'Sure', mentions: [] }))
+    expect(answer.thread_id).toBe(first.id)
+    expect((await post('dan', { direct_message_id: between.id, thread_id: first.id, body: 'Me too', mentions: [] })).status).toBe(403)
+    expect(await list('dan', `thread_id = ${first.id}`)).toEqual([])
+    expect(await read('ana', first.id)).toMatchObject({ reply_count: 1 })
+  })
+
   it('keeps its thread’s first message from being deleted, so nobody’s replies go with it', async () => {
     const first = await say('ana', general.id, 'Keep this thread')
     const answer = await created(await reply('ben', first, 'Kept'))
