@@ -14,16 +14,18 @@ type Props = MessageHandlers & {
   me: string
   member: (id: string) => Person | undefined
   newLineAbove?: number
+  /** When what shows above these was sent, such as a thread's first message above its replies. */
+  shownAbove?: string
 }
 
 /**
- * The thread's rows: a day divider where a day begins, the "New messages" line above the message `newLineAbove` names,
+ * The chat's rows: a day divider where a day begins, the "New messages" line above the message `newLineAbove` names,
  * then each message under its author, a quick run of one person's grouped, with its files and reactions.
  */
-export const ConversationMessages = ({ messages, reactions, attachments, me, member, newLineAbove, ...handlers }: Props) => {
+export const ConversationMessages = ({ messages, reactions, attachments, me, member, newLineAbove, shownAbove, ...handlers }: Props) => {
   const reactionsOf = reactionsByMessage(reactions)
   const attachmentsOf = attachmentsByMessage(attachments)
-  return threadRows(messages).map(({ message, newDay, continued }) => (
+  return threadRows(messages, shownAbove).map(({ message, newDay, continued }) => (
     <Fragment key={message.id}>
       {newDay && <ChatDivider label={chatDayLabel(message.sent_at)} />}
       {message.id === newLineAbove && <ChatDivider tone="new" />}

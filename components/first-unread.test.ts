@@ -2,7 +2,18 @@ import { describe, expect, it } from 'vitest'
 import { firstUnreadId } from './first-unread'
 import type { Message } from './message'
 
-const message = (id: number, author_id: string): Message => ({ id, author_id, body: 'Hi', mentions: [], sent_at: '2026-10-28T10:00:00Z', edited_at: null })
+const message = (id: number, author_id: string): Message => ({
+  id,
+  author_id,
+  body: 'Hi',
+  mentions: [],
+  sent_at: '2026-10-28T10:00:00Z',
+  edited_at: null,
+  thread_id: null,
+  reply_count: 0,
+  last_reply_at: null,
+  deletable: false,
+})
 const thread = [message(1, 'ben'), message(2, 'ana'), message(3, 'ben'), message(4, 'ben')]
 
 describe('firstUnreadId', () => {

@@ -1,8 +1,9 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { ChatThread, useMembers, useSignedInUser } from '@protobase/ui'
 import type { Conversation } from './conversation'
 import { ConversationComposer } from './conversation-composer'
 import { ConversationMessages } from './conversation-messages'
+import { ThreadPanel } from './thread-panel'
 import { useConversationMessages } from './use-conversation-messages'
 import { useMessageAttachments } from './use-message-attachments'
 import { useMessageReactions } from './use-message-reactions'
@@ -12,15 +13,18 @@ import { useReadPosition } from './use-read-position'
 type Props = { conversation: Conversation; topic?: string; empty: string; placeholder: string }
 
 /**
- * A conversation's chat: its messages, followed live, and the composer under them. The thread scrolls inside a box of
- * the window's height, as the chat parts do, so the composer stays in view while a reader goes back through it. It
- * shows its messages once the reader's read position is there too, so it opens on the "New messages" line above the
- * first one they have not read, and it moves their position to the newest message whenever they have read to the end.
- * Its messages carry their files and reactions, and the reader edits and deletes their own. Key it by the conversation, so
- * another one starts afresh.
+ * A conversation's chat: its messages outside threads, followed live, and the composer under them, with the thread the
+ * reader opened beside them. The chat scrolls inside a box of the window's height, as the chat parts do, so the composer
+ * stays in view while a reader goes back through it. It shows its messages once the reader's read position is there
+ * too, so it opens on the "New messages" line above the first one they have not read, and it moves their position to the
+ * newest message whenever they have read to the end. Its messages carry their files, reactions and replies' count, and
+ * the reader edits their own and deletes those they may. It listens to a `SharedLive` around it. Key it by the
+ * conversation, so another one starts afresh.
  */
 export const ConversationChat = ({ conversation, topic, empty, placeholder }: Props) => {
   const chat = useConversationMessages(conversation)
+  const [threadId, setThreadId] = useState<number>()
+  const threadFirst = chat.messages.find((message) => message.id === threadId)
   const messageIds = useMemo(() => chat.messages.map((message) => message.id), [chat.messages])
   const reactions = useMessageReactions(messageIds)
   const attachments = useMessageAttachments(messageIds)
@@ -35,35 +39,50 @@ export const ConversationChat = ({ conversation, topic, empty, placeholder }: Pr
   }
   const error = chat.error ?? position.error ?? reactions.error ?? attachments.error
   return (
-    <div className="flex h-[70vh] min-h-80 flex-col">
-      {topic && <p className="pb-2 text-sm text-muted-foreground">{topic}</p>}
-      <ChatThread
-        length={ready ? chat.messages.length : 0}
-        followKey={chat.sent}
-        onLoadEarlier={chat.hasEarlier ? chat.loadEarlier : undefined}
-        loadingEarlier={chat.loadingEarlier}
-        onReadToEnd={readToEnd}
-        empty={empty}
-      >
-        {ready && (
-          <ConversationMessages
-            messages={chat.messages}
-            reactions={reactions.reactions}
-            attachments={attachments.attachments}
-            me={me}
-            member={member}
-            newLineAbove={newLineAbove}
-            onEdit={chat.edit}
-            onDelete={chat.remove}
-            onReact={reactions.react}
-            onUnreact={reactions.unreact}
-          />
-        )}
-      </ChatThread>
-      {error !== undefined && <p className="px-4 text-sm text-danger-text">Could not read or change the messages. Reload the page to try again.</p>}
-      <div className="pt-3">
-        <ConversationComposer placeholder={placeholder} onSend={chat.send} />
+    <div className="flex h-[70vh] min-h-80">
+      <div className="flex min-w-0 flex-1 flex-col">
+        {topic && <p className="pb-2 text-sm text-muted-foreground">{topic}</p>}
+        <ChatThread
+          length={ready ? chat.messages.length : 0}
+          followKey={chat.sent}
+          onLoadEarlier={chat.hasEarlier ? chat.loadEarlier : undefined}
+          loadingEarlier={chat.loadingEarlier}
+          onReadToEnd={readToEnd}
+          empty={empty}
+        >
+          {ready && (
+            <ConversationMessages
+              messages={chat.messages}
+              reactions={reactions.reactions}
+              attachments={attachments.attachments}
+              me={me}
+              member={member}
+              newLineAbove={newLineAbove}
+              onEdit={chat.edit}
+              onDelete={chat.remove}
+              onReact={reactions.react}
+              onUnreact={reactions.unreact}
+              onOpenThread={setThreadId}
+            />
+          )}
+        </ChatThread>
+        {error !== undefined && <p className="px-4 text-sm text-danger-text">Could not read or change the messages. Reload the page to try again.</p>}
+        <div className="pt-3">
+          <ConversationComposer placeholder={placeholder} onSend={chat.send} />
+        </div>
       </div>
+      {threadFirst && me !== undefined && (
+        <ThreadPanel
+          key={threadFirst.id}
+          conversation={conversation}
+          first={threadFirst}
+          me={me}
+          member={member}
+          onEditFirst={chat.edit}
+          onDeleteFirst={chat.remove}
+          onClose={() => setThreadId(undefined)}
+        />
+      )}
     </div>
   )
 }

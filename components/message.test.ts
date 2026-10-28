@@ -1,13 +1,40 @@
 import { describe, expect, it } from 'vitest'
 import { dropMessages, mergeMessages, replaceMessages, toMessage, type Message } from './message'
 
-const message = (id: number, body = `Message ${id}`): Message => ({ id, author_id: 'ana', body, mentions: [], sent_at: '2026-10-28T09:00:00Z', edited_at: null })
+const message = (id: number, body = `Message ${id}`): Message => ({
+  id,
+  author_id: 'ana',
+  body,
+  mentions: [],
+  sent_at: '2026-10-28T09:00:00Z',
+  edited_at: null,
+  thread_id: null,
+  reply_count: 0,
+  last_reply_at: null,
+  deletable: true,
+})
 
 describe('toMessage', () => {
   it('keeps when a message was edited, and null for one never edited', () => {
     const record = { id: 1, author_id: 'ana', body: 'Hi', mentions: [], sent_at: '2026-10-28T09:00:00Z' }
     expect(toMessage({ ...record, edited_at: '2026-10-28T09:05:00Z' }).edited_at).toBe('2026-10-28T09:05:00Z')
     expect(toMessage({ ...record, edited_at: null }).edited_at).toBeNull()
+  })
+
+  it('keeps its thread, its replies and whether the reader may delete it, as the API says', () => {
+    const record = { id: 2, author_id: 'ben', body: 'Yes', mentions: [], sent_at: '2026-10-28T09:01:00Z', edited_at: null }
+    expect(toMessage({ ...record, thread_id: 1, reply_count: 0, last_reply_at: null, permissions: { update: false, delete: true } })).toMatchObject({
+      thread_id: 1,
+      reply_count: 0,
+      last_reply_at: null,
+      deletable: true,
+    })
+    expect(toMessage({ ...record, thread_id: null, reply_count: 3, last_reply_at: '2026-10-28T10:00:00Z' })).toMatchObject({
+      thread_id: null,
+      reply_count: 3,
+      last_reply_at: '2026-10-28T10:00:00Z',
+      deletable: false,
+    })
   })
 })
 

@@ -1,22 +1,28 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useClient } from '@protobase/ui'
+import { chatFilter } from './chat-filter'
 import type { Conversation } from './conversation'
 import { changesOf } from './live-changes'
 import { dropMessages, mergeMessages, replaceMessages, toMessage, type Message } from './message'
+import { useSharedLive } from './shared-live'
 
 /** How many messages a page of the chat brings: the latest on opening, and each "Load earlier". */
 export const pageSize = 50
 
 /**
- * A conversation's messages, oldest first: the latest page on opening, earlier pages on `loadEarlier`, and new ones as
- * the live stream tells of them, read through the messages API with the reader's own access; an edited message is read
- * again and a deleted one taken out as the stream tells of them too. `send` posts the reader's message with its
- * files in one write, and `sent` counts their sends, the thread's `followKey`; `edit` changes one of theirs and `remove`
- * deletes it after its files. Its reads belong to
- * one conversation: the component that uses it is keyed by the conversation, so another one starts afresh.
+ * A conversation's messages outside threads, oldest first, or with `threadId` that thread's replies: the latest page on
+ * opening, earlier pages on `loadEarlier`, and new ones as the shared live stream tells of them, read through the
+ * messages API with the reader's own access; an edited message is read again, such as a thread's first message whose
+ * replies changed, and a deleted one taken out as the stream tells of them too. `send` posts the reader's message, a
+ * reply in the thread with `threadId`, with its files in one write, and `sent` counts their sends, the thread's
+ * `followKey`; `edit` changes one of theirs and `remove` deletes one after its files. Its reads belong to one
+ * conversation or thread: the component that uses it is keyed by it, so another one starts afresh.
  */
-export const useConversationMessages = ({ field, id }: Conversation) => {
+export const useConversationMessages = (conversation: Conversation, threadId?: number) => {
+  const { field, id } = conversation
   const client = useClient()
+  const listen = useSharedLive()
+  const shown = chatFilter(conversation, threadId)
   const [messages, setMessages] = useState<Message[]>([])
   const [hasEarlier, setHasEarlier] = useState(false)
   const [loadingEarlier, setLoadingEarlier] = useState(false)
@@ -29,11 +35,11 @@ export const useConversationMessages = ({ field, id }: Conversation) => {
 
   const read = useCallback(
     (where: string, orderBy: 'id asc' | 'id desc') =>
-      client.list('messages', { filter: `${field} = ${id}${where}`, orderBy, pageSize }).then((page) => ({
+      client.list('messages', { filter: `${shown}${where}`, orderBy, pageSize }).then((page) => ({
         items: page.items.map((record) => toMessage(record)),
         more: page.nextPageToken !== '',
       })),
-    [client, field, id],
+    [client, shown],
   )
 
   const add = useCallback((incoming: Message[]) => {
@@ -76,7 +82,7 @@ export const useConversationMessages = ({ field, id }: Conversation) => {
 
   useEffect(() => {
     void readLatest()
-    return client.live({
+    return listen({
       onChanges: (changes) => {
         const { created, updated, deleted } = changesOf(changes, 'messages')
         if (deleted.size > 0) drop(deleted)
@@ -85,7 +91,7 @@ export const useConversationMessages = ({ field, id }: Conversation) => {
       },
       onResync: () => void readLatest(),
     })
-  }, [client, readLatest, readNewer, readEdited, drop])
+  }, [listen, readLatest, readNewer, readEdited, drop])
 
   const loadEarlier = useCallback(() => {
     const first = messages[0]
@@ -104,7 +110,7 @@ export const useConversationMessages = ({ field, id }: Conversation) => {
       setSent((count) => count + 1)
       client
         .batchWrite([
-          { op: 'create', resource: 'messages', ref: 'message', data: { [field]: id, body, mentions } },
+          { op: 'create', resource: 'messages', ref: 'message', data: { [field]: id, thread_id: threadId, body, mentions } },
           ...files.map((file) => ({ op: 'create' as const, resource: 'attachments', data: { message_id: { $ref: 'message' }, file } })),
         ])
         .then(({ results }) => {
@@ -112,7 +118,7 @@ export const useConversationMessages = ({ field, id }: Conversation) => {
           if (created?.op === 'create') add([toMessage(created.record)])
         }, setError)
     },
-    [client, field, id, add],
+    [client, field, id, threadId, add],
   )
 
   const edit = useCallback(

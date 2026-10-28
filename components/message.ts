@@ -9,7 +9,16 @@ export type Message = {
   sent_at: string
   /** When its author last changed it, or null for a message never edited. */
   edited_at: string | null
+  /** For a reply, its thread's first message; null for a message of the conversation's flow. */
+  thread_id: number | null
+  /** How many replies its thread has, and when the last came, or null for none. */
+  reply_count: number
+  last_reply_at: string | null
+  /** Whether the reader may delete it, as the API says of each record: their own, or anyone's to a moderator. */
+  deletable: boolean
 }
+
+const permissionsOf = (record: Record<string, unknown>) => (typeof record.permissions === 'object' && record.permissions !== null ? (record.permissions as Record<string, unknown>) : {})
 
 /** A record of the messages API as a `Message`. */
 export const toMessage = (record: Record<string, unknown>): Message => ({
@@ -19,6 +28,10 @@ export const toMessage = (record: Record<string, unknown>): Message => ({
   mentions: Array.isArray(record.mentions) ? record.mentions.map(String) : [],
   sent_at: String(record.sent_at),
   edited_at: record.edited_at == null ? null : String(record.edited_at),
+  thread_id: record.thread_id == null ? null : Number(record.thread_id),
+  reply_count: Number(record.reply_count),
+  last_reply_at: record.last_reply_at == null ? null : String(record.last_reply_at),
+  deletable: permissionsOf(record).delete === true,
 })
 
 /** `current` with `incoming` added, each message once, in the order they were sent (their ids). */
