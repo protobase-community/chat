@@ -12,9 +12,11 @@ export const mentionIds = (mentions: unknown) =>
 const mine = (ctx: AccessContext) => where.eq('author_id', ctx.user!.id!)
 
 /**
- * public.messages: what people say in a channel or a direct message, exactly one of them. A message is posted into, and
- * read in, only a conversation its reader may read, so a private one's messages stay with its members. Only its author,
- * the superuser too, edits or deletes it, and it stays in its conversation. Its files are its attachments.
+ * public.messages: what people say in a channel or a direct message, exactly one of them, in its flow or, with
+ * `thread_id`, as a reply in the thread of one of its messages. A message is posted into, and read in, only a
+ * conversation its reader may read, so a private one's messages and replies stay with its members. Only its author, the
+ * superuser too, edits or deletes it, and it stays where it was posted; it is not deleted while somebody replied to
+ * it, which the database checks. Its files are its attachments.
  */
 export const messages = resource('messages')
   .table('messages')
@@ -23,6 +25,9 @@ export const messages = resource('messages')
     organization_id: f.text().readOnly(),
     channel_id: f.relation('channels').optional().filterable().access({ update: () => false }),
     direct_message_id: f.relation('direct_messages').optional().filterable().access({ update: () => false }),
+    // For a reply, its thread's first message, a message of the same conversation's flow, which the database checks;
+    // null for a message of the flow.
+    thread_id: f.relation('messages').optional().filterable().access({ update: () => false }),
     author_id: f.text().readOnly().filterable(),
     // Null for a message of files alone; the database refuses a message with neither text nor files.
     body: f.text().min(1).max(10_000).optional(),
@@ -31,6 +36,9 @@ export const messages = resource('messages')
     sent_at: f.timestamp().readOnly().dbDefault(),
     // When its author last changed its body or mentions, set by the database; null for a message never edited.
     edited_at: f.timestamp().readOnly().optional(),
+    // How many replies its thread has and when the last came, kept by the database; 0 and null for none.
+    reply_count: f.integer().readOnly(),
+    last_reply_at: f.timestamp().readOnly().optional(),
   })
   .primaryKey((r) => r.id)
   .tenant((r) => r.organization_id)

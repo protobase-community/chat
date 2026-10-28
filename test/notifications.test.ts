@@ -88,6 +88,13 @@ describe('a mention', () => {
     expect(await told('dan', body, 'Ping, @Dan Mwangi')).toBe(false)
   })
 
+  it('in a reply tells the person it mentions, naming the thread', async () => {
+    const thread = await say('ben', { channel_id: general.id }, 'Who has the keys?')
+    const body = 'I think @Dan Mwangi has them'
+    await say('ana', { channel_id: general.id, thread_id: thread.id }, body, [ids.dan])
+    expect(await arrived('dan', body)).toMatchObject({ title: 'Ana Silva mentioned you in a thread in #general', url: `${chat.url}/channels/${general.id}` })
+  })
+
   it('of someone of another workspace tells no one', async () => {
     await say('ana', { channel_id: general.id }, 'Hello, Cara', [ids.cara])
     // Messages are dispatched in order, so once a later one reached Ben, Cara's turn has passed.

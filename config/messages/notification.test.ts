@@ -3,19 +3,31 @@ import { excerpt, excerptLength, filesAloneText, notificationOf } from './notifi
 
 describe('notificationOf', () => {
   it('names the sender and the channel, and opens the channel', () => {
-    const notification = notificationOf({ sender: 'Maya Jansen', body: 'Ready, @Sam Okafor?' }, { kind: 'channel', id: 4, name: 'launch', memberIds: null }, 'https://chat.example.com')
+    const notification = notificationOf({ sender: 'Maya Jansen', body: 'Ready, @Sam Okafor?', reply: false }, { kind: 'channel', id: 4, name: 'launch', memberIds: null }, 'https://chat.example.com')
     expect(notification).toEqual({ title: 'Maya Jansen mentioned you in #launch', body: 'Ready, @Sam Okafor?', url: 'https://chat.example.com/channels/4' })
   })
 
   it('names the sender of a direct message, and opens it', () => {
-    const notification = notificationOf({ sender: 'Sam Okafor', body: 'Lunch?' }, { kind: 'direct_message', id: 7, memberIds: ['maya', 'sam'] }, 'http://localhost:5173')
+    const notification = notificationOf({ sender: 'Sam Okafor', body: 'Lunch?', reply: false }, { kind: 'direct_message', id: 7, memberIds: ['maya', 'sam'] }, 'http://localhost:5173')
     expect(notification).toEqual({ title: 'Sam Okafor sent you a direct message', body: 'Lunch?', url: 'http://localhost:5173/direct_messages/7' })
+  })
+})
+
+describe('notificationOf a reply in a thread', () => {
+  it('says it is in a thread of the channel, and opens the channel', () => {
+    const notification = notificationOf({ sender: 'Maya Jansen', body: 'Done, @Sam Okafor', reply: true }, { kind: 'channel', id: 4, name: 'launch', memberIds: null }, 'https://chat.example.com')
+    expect(notification).toMatchObject({ title: 'Maya Jansen mentioned you in a thread in #launch', url: 'https://chat.example.com/channels/4' })
+  })
+
+  it('says it is in a thread of the direct message', () => {
+    const notification = notificationOf({ sender: 'Sam Okafor', body: 'Thursday', reply: true }, { kind: 'direct_message', id: 7, memberIds: ['maya', 'sam'] }, 'http://localhost:5173')
+    expect(notification.title).toBe('Sam Okafor replied in a thread of your direct message')
   })
 })
 
 describe('notificationOf a message of files alone', () => {
   it('says it holds files, having no text to start with', () => {
-    const notification = notificationOf({ sender: 'Sam Okafor', body: null }, { kind: 'direct_message', id: 7, memberIds: ['maya', 'sam'] }, 'http://localhost:5173')
+    const notification = notificationOf({ sender: 'Sam Okafor', body: null, reply: false }, { kind: 'direct_message', id: 7, memberIds: ['maya', 'sam'] }, 'http://localhost:5173')
     expect(notification.body).toBe(filesAloneText)
   })
 })

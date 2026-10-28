@@ -41,8 +41,9 @@ const readersAmong = async (db: Db, organizationId: string, people: string[]) =>
 }
 
 /**
- * Tells the people a new message mentions, and in a direct message its other members, in their bell and as push: never
- * its author, and only those who may read it, since the notification shows its start.
+ * Tells the people a new message mentions, and in a direct message its other members, in their bell and as push, of a
+ * reply in a thread as of any other message: never its author, and only those who may read it, since the notification
+ * shows its start.
  */
 export const notifyOfMessages = subscription('notifyOfMessages', {
   events: ['messages.created'],
@@ -53,7 +54,7 @@ export const notifyOfMessages = subscription('notifyOfMessages', {
     const recipients = await readersAmong(db, organizationId, toldOf({ author_id: String(message.author_id), mentions: ids(message.mentions) }, conversation))
     if (recipients.length === 0) return
     const author = await db.selectFrom('auth.user').select('name').where('id', '=', String(message.author_id)).executeTakeFirstOrThrow()
-    const notification = notificationOf({ sender: author.name, body: message.body == null ? null : String(message.body) }, conversation, appOrigin())
+    const notification = notificationOf({ sender: author.name, body: message.body == null ? null : String(message.body), reply: message.thread_id != null }, conversation, appOrigin())
     await sendNotification(db, { userIds: recipients, inbox: true }, notification)
   },
 })

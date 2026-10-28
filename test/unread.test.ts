@@ -108,6 +108,14 @@ describe('the unread messages', () => {
     expect(await unread('ben', [{ id: lobby.id, lastReadId: 0 }], true)).toEqual({})
   })
 
+  it('leave out replies in threads, which are not in the conversation’s flow', async () => {
+    const quiet = await created(await send('POST', '/channels', people.ana, { name: 'quiet' }))
+    const thread = await say('ana', quiet.id, 'Thoughts?')
+    await send('POST', '/messages', people.ben, { channel_id: quiet.id, thread_id: thread.id, body: 'Yes, @Ana', mentions: [ids.ana] }).then(created)
+    expect(await unread('ana', [{ id: quiet.id, lastReadId: thread.id }])).toEqual({})
+    expect(await unread('ana', [{ id: quiet.id, lastReadId: thread.id }], true)).toEqual({})
+  })
+
   it('leave out a private channel’s messages for someone outside it, though they name the channel', async () => {
     await say('ana', plans.id, 'Only for Ben and me, @Dan', [ids.dan])
     const both = [{ id: lobby.id, lastReadId: 0 }, { id: plans.id, lastReadId: 0 }]
