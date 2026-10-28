@@ -59,6 +59,7 @@ app on it with `protobase dev`.
 | --- | --- |
 | Workspaces, joined by invitation, each seeing only its own channels | This version |
 | Channels with a name and a topic, open to the whole workspace | This version |
+| A conversation filling the page beside the sidebar: its messages scroll, the composer stays at the bottom, and a Details link opens its members, Edit and Delete | This version |
 | Messages with the author's name, avatar and time, one person's run of messages grouped | This version |
 | Day dividers: "Today", "Yesterday", the date | This version |
 | New messages arrive live; a reader who scrolled back keeps their place, sending jumps to the end | This version |
@@ -229,10 +230,15 @@ app on it with `protobase dev`.
 - **Names from the workspace's members.** A message stores its author and mentions as user ids;
   [`useMembers()`](https://docs.protobase.net/reference/custom-components/#members-names) gives the members of the
   workspace, by name and without their addresses, for the authors, the mentions and the people `@` lists (at most 8).
-- **The chat on the channel's page.** `l.custom(ChannelChat)` in `config/channels/ui.ts` puts the chat on the channel's
-  record page, under a private channel's members, with `.recordMode('read')` so the page reads as a chat and **Edit**
-  changes the name, topic and members, and
-  `nav({ recent: { orderBy: 'name asc', limit: 20 } })` lists the channels under the sidebar's Channels entry
+- **The chat is the conversation's page.** `.record({ component: ChannelChat })` in `config/channels/ui.ts`, and
+  `DirectMessageChat` in `config/direct_messages/ui.ts`, make a conversation's record page the chat, filling the area
+  beside the sidebar and under the top bar, where the page does not scroll: the messages scroll in `ChatThread` and the
+  composer stays at the bottom
+  ([full-area record pages](https://docs.protobase.net/reference/ui-config/#full-area-record-pages)). Its header's
+  **Details** (`conversation-header.tsx`) is an `AppLink` to the conversation's standard page, its address with
+  `standard: true`, read rather than a form with `.recordMode('read')`, where a private channel's members show and
+  **Edit** changes the name, topic and members. `nav({ recent: { orderBy: 'name asc', limit: 20 } })` lists the
+  channels under the sidebar's Channels entry
   ([recent records](https://docs.protobase.net/reference/sidebar/#recent-records)).
 - **"New message" in the sidebar.** `create: { label: 'New message' }` in the `nav` of `config/direct_messages/ui.ts`
   puts a link to the create form under the sidebar's Direct messages entry, for whoever may start one
