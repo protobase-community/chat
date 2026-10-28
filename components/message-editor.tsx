@@ -12,7 +12,8 @@ type Props = {
 
 /**
  * A message's text in a box to change it, its mentions kept while their `@{name}` stays: Enter or Save keeps the trimmed
- * text, Shift+Enter starts a new line, Escape or Cancel leaves it as it was. An empty text is no edit: deleting is.
+ * text, Shift+Enter starts a new line, Escape or Cancel leaves it as it was. An empty text is no edit: deleting is. A
+ * message of files alone starts empty, to give it a text.
  */
 export const MessageEditor = ({ message, member, onSave, onCancel }: Props) => {
   const { data: members = [] } = useMembers()
@@ -20,7 +21,7 @@ export const MessageEditor = ({ message, member, onSave, onCancel }: Props) => {
     const name = member(id)?.name
     return name ? [{ id, name }] : []
   })
-  const [draft, setDraft] = useState<MentionDraft>({ text: message.body, picked })
+  const [draft, setDraft] = useState<MentionDraft>({ text: message.body ?? '', picked })
   const text = draft.text.trim()
   const save = () => {
     if (text === '') return
