@@ -8,11 +8,12 @@ const ChannelChat = component('ChannelChat')
 /**
  * The workspace's channels the reader may read, listed in the sidebar by name: a member opens one to chat in it, or
  * starts one with a name, an optional topic and whether it is private, with its members. A channel's page is its chat,
- * read rather than a form, under a private channel's members, with Edit for its name, topic and members.
+ * read rather than a form, under a private channel's members, with Edit for its name, topic and members. One with
+ * messages the reader has not read shows bold, with a count of those that mention them (the `unread` marks).
  */
 export const channelsView = view<typeof channels>('channels')
   .names({ singular: 'Channel', plural: 'Channels' })
-  .nav({ recent: { orderBy: 'name asc', limit: 20 } })
+  .nav({ recent: { orderBy: 'name asc', limit: 20, marks: 'unread' } })
   .title((r) => r.name)
   .fields((r) => ({
     topic: r.topic.help('What the channel is for, shown under its name'),

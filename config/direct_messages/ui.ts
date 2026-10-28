@@ -7,11 +7,12 @@ const DirectMessageChat = component('DirectMessageChat')
 
 /**
  * The reader's direct messages, listed in the sidebar under "Direct messages", each named after the other people in it
- * (the `memberNames` title of protobase.ui.tsx). New starts one with the people picked; its page is its chat.
+ * (the `memberNames` title of protobase.ui.tsx). New starts one with the people picked; its page is its chat. One with
+ * unread messages shows bold, with their count (the `unread` marks).
  */
 export const directMessagesView = view<typeof directMessages>('direct_messages')
   .names({ singular: 'Message', plural: 'Direct messages' })
-  .nav({ recent: { orderBy: 'created_at desc', limit: 20 } })
+  .nav({ recent: { orderBy: 'created_at desc', limit: 20, marks: 'unread' } })
   .titleFrom('memberNames', (r) => [r.member_ids])
   .fields((r) => ({ member_ids: r.member_ids.label('People').widget('members').help('Who to talk to; you are in it too', { when: 'editing' }) }))
   .list((r) => ({ columns: [r.member_ids, r.created_at], sort: [[r.created_at, 'desc']] }))
