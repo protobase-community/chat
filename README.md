@@ -1,7 +1,7 @@
 # Chat
 
 A team chat app built on Protobase: a team signs in to its workspace, talks in channels, private channels and direct
-messages, and sees each other's messages arrive live, with @mentions and notifications of them. Start from it for a chat of your own, or read it to see how Protobase builds one:
+messages, and sees each other's messages arrive live, with @mentions, shared files and images, and notifications of them. Start from it for a chat of your own, or read it to see how Protobase builds one:
 everything below is Protobase's own features, with one piece of server code of the app's own, the subscription that
 notifies people of messages.
 
@@ -24,7 +24,8 @@ the private #launch and a direct message, which Lena and your own account do not
 joins the demo workspace as its admin, so you see the chat as a member too and can invite others from its Members page.
 It runs again without doubling anything, and needs your own account first, since the first account is always the
 superuser. Set your
-own `PROTOBASE_SECRET` in `.env` (`openssl rand -base64 32`). `bun run db:down` stops the database.
+own `PROTOBASE_SECRET` in `.env` (`openssl rand -base64 32`): it also signs the files' upload tickets and download
+links. Shared files are kept in `data/files/private`, which git ignores. `bun run db:down` stops the database.
 
 Mention Sam as Maya, or write to Maya as Sam, and the other sees it in the bell in the top bar within a few seconds.
 For push to the browser too, generate the Web Push keys and put them in `.env`, with an address push services can reach
@@ -67,7 +68,7 @@ app on it with `protobase dev`.
 | Notifications of mentions and direct messages in the bell and as browser push, opening the conversation | This version |
 | Editing and deleting one's own messages, "(edited)" under a changed one, both reaching others live | This version |
 | Reacting with an emoji of a small set: each reaction's count under the message, who reacted on hover, one's own highlighted, live | This version |
-| Files and images | The fifth follow-up |
+| Files in messages, with or without text: images shown as previews, any other file as its name and size to download, at most 10 of up to 20 MB each | This version |
 | Threads | The sixth follow-up |
 | Message search, presence and typing indicators | Later |
 | Voice and video calls | Later, once Protobase has calling |
@@ -92,6 +93,14 @@ app on it with `protobase dev`.
 
 <gap>A message cannot be answered with any emoji outside the six of the set because an emoji picker is not implemented.</gap>
 
+<gap>A file cannot be pasted or dropped into the message box because taking files in Protobase's `Composer` is not implemented.</gap> The 📎 button beside it picks them, and **Send without text** sends them alone, since the box sends only text.
+
+<gap>A sent message's files cannot be added to or taken off because editing a message's files is not implemented.</gap> Deleting the message deletes them.
+
+<gap>A file's link on a page left open for over an hour cannot download it because renewing the signed links of an open conversation is not implemented.</gap> Reloading the page brings new ones.
+
+<gap>An image's preview cannot be a smaller copy of it because image variants, which need the sharp package, are not implemented here.</gap> The preview loads the image itself, drawn at most 240 pixels high.
+
 <gap>Someone who has the conversation open still gets a notification of its new messages because telling whether it is in front of them is not implemented.</gap>
 
 ## How Protobase builds it
@@ -105,7 +114,7 @@ app on it with `protobase dev`.
 - **Each workspace sees only its own.** Channels, direct messages and messages declare `.tenant((r) => r.organization_id)`
   ([data config](https://docs.protobase.net/reference/data-config/#resource)): every read is limited to the workspace
   the session works in, and every create is stamped with it; no request may set it.
-- **Nobody posts as someone else.** `.author((r) => r.author_id)` on channels, direct messages and messages, and
+- **Nobody posts as someone else.** `.author((r) => r.author_id)` on channels, direct messages, messages and attachments, and
   `.author((r) => r.user_id)` on reactions, stamps the signed-in person's id on every create, and refuses a request
   that names the author.
 - **Only its author changes a message.** The messages' update and delete rules are the row filter `author_id = me`
@@ -142,10 +151,28 @@ app on it with `protobase dev`.
   conversation, and the create form opens it instead of saying it could not save. Someone outside it gets the plain
   `409`, though the starter is always in the set, so they never repeat one they are not in
   ([opening an existing record](https://docs.protobase.net/reference/data-config/#opening-an-existing-record)).
+- **Files are records too.** `attachments` (`config/attachments/data.ts`) holds one file of a message in a
+  [file field](https://docs.protobase.net/reference/files/), `f.file().maxSize(20_000_000)`, a text column holding the
+  stored file's URI in Protobase's `private` storage, with `.derive()` writing an image's width and height, which the
+  chat gives the preview so the thread does not jump as it loads. The chat uploads each picked file at once
+  (`client.upload`, `components/use-attachment-uploads.ts`), checking the size first so a larger file is refused with
+  its name, size and the limit, and sends the message and its files' upload tickets in one
+  [batch write](https://docs.protobase.net/reference/api/#batch-writes) (`use-conversation-messages.ts`).
+  `.parent((r) => r.message_id, 'read')` reads the message as the reader would, its conversation included, so only
+  those who read a message list its files or get their links, which the API signs for them; a download checks the link
+  and that the row still holds the file. A composite foreign key to the message's `(id, organization_id, author_id)`
+  lets only its author add files (`db/migrations/017_attachments.sql`). A message of files alone has a null `body`,
+  and a check at commit refuses one with neither text nor files. The foreign key refuses deleting a message that has
+  files, so the chat deletes its files first in the same batch: a delete through the API also schedules each stored
+  file's deletion ([deleting files](https://docs.protobase.net/reference/files/#deleting-files)). Files show under the
+  message's text (`message-attachments.tsx`): an image as a preview linking to it, any other file as a link that
+  downloads it.
 - **Live updates.** `.live()` on channels, direct messages, messages and reactions, with the jobs schema and change capture that
   `protobase migration` wrote (`db/migrations/008_jobs.sql` and `009_changes.sql`), tells each open page which records
   changed, only of its own workspace and never their values; the chat follows the stream with `client.live` and reads
   the new messages through the API as its reader, so a private conversation's messages reach only its members ([live updates](https://docs.protobase.net/reference/live/)).
+  Each `client.live` holds one of the browser's few connections to the app, so attachments, written and deleted only with
+  their message, are not live: the chat reads a message's files when the message shows (`use-message-attachments.ts`).
 - **The chat parts.** A channel's and a direct message's page are built from Protobase's
   [chat parts](https://docs.protobase.net/reference/custom-components/#chat-parts): `ChatThread`, which keeps the
   reader's place, goes to the end when they send (`followKey`) and offers earlier messages (`onLoadEarlier`);
@@ -156,7 +183,7 @@ app on it with `protobase dev`.
   the members to mention and whose `onSend(text, mentionIds)` gives the ids each message keeps in `mentions`, which the
   unread counts and notifications read. `components/` holds the pages' own code: paging and following a conversation's
   messages, an edit read again and a delete taken out as the live stream tells of them (`use-conversation-messages.ts`),
-  their reactions (`use-message-reactions.ts`), grouping them (`thread-rows.ts`) and drawing them
+  their reactions and files (`use-message-records.ts`), grouping them (`thread-rows.ts`) and drawing them
   (`conversation-chat.tsx`), on a channel's page (`channel-chat.tsx`) and a direct message's
   (`direct-message-chat.tsx`), exported from `protobase.ui.tsx`.
 - **Names from the workspace's members.** A message stores its author and mentions as user ids;
