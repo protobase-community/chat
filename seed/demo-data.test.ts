@@ -27,4 +27,16 @@ describe('the demo conversation', () => {
     }
     expect(messages.some((message) => message.mentions?.length)).toBe(true)
   })
+
+  it('answers each reply’s thread, an earlier message of its place outside threads', () => {
+    const place = (message: (typeof messages)[number]) => ('channel' in message ? `#${message.channel}` : message.directMessage)
+    const replies = messages.filter((message) => message.replyTo !== undefined)
+    expect(replies.length).toBeGreaterThan(0)
+    for (const reply of replies) {
+      const first = messages.slice(0, messages.indexOf(reply)).find((message) => message.body === reply.replyTo)
+      expect(first).toBeDefined()
+      expect(first!.replyTo).toBeUndefined()
+      expect(place(first!)).toBe(place(reply))
+    }
+  })
 })

@@ -48,10 +48,18 @@ describe('the demo seed', () => {
     expect(await counts()).toEqual(first)
   })
 
-  it('makes the developer the workspace’s admin, so their own account sees the members', async () => {
+  it('makes the developer the workspace’s admin and moderator, so their own account sees the members and moderates', async () => {
     const [row] = await sql`
-      select m.role from auth.member m join auth."user" u on u.id = m.user_id where u.email = 'dev@example.com'`
-    expect(row).toEqual({ role: 'admin' })
+      select m.role, m.app_roles from auth.member m join auth."user" u on u.id = m.user_id where u.email = 'dev@example.com'`
+    expect(row).toEqual({ role: 'admin', app_roles: ['moderator'] })
+  })
+
+  it('writes the replies in their thread, counted on its first message', async () => {
+    const rows = await sql<{ body: string; reply_count: number; replies: string[] }[]>`
+      select first.body, first.reply_count, array(select reply.body from public.messages reply where reply.thread_id = first.id order by reply.id) as replies
+      from public.messages first where first.reply_count > 0`
+    const replies = messages.filter((message) => message.replyTo !== undefined)
+    expect(rows).toEqual([{ body: replies[0]!.replyTo, reply_count: replies.length, replies: replies.map((reply) => reply.body) }])
   })
 
   it('keeps the private channel and the direct message to Maya and Sam', async () => {

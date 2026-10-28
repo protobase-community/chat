@@ -1,5 +1,6 @@
 // The demo workspace the seed writes: three people, #general and #random, the private #launch and a direct message of
-// Maya and Sam, which Lena and the developer do not see, and a short conversation over yesterday and today. A message
+// Maya and Sam, which Lena and the developer do not see, and a short conversation over yesterday and today, with a
+// thread in #general. A message
 // names its author, its direct message and the people it mentions by their key in `people`; `@Name` in its text is how
 // the chat shows a mention.
 
@@ -39,6 +40,8 @@ export type DemoMessage = DemoPlace & {
   at: string
   body: string
   mentions?: Person[]
+  /** For a reply, the body of its thread's first message, an earlier message of the same place. */
+  replyTo?: string
 }
 
 export const messages: DemoMessage[] = [
@@ -54,6 +57,8 @@ export const messages: DemoMessage[] = [
   { directMessage: 'maya_sam', author: 'maya', day: 1, at: '16:40', body: 'Can we move our one-on-one to Thursday?' },
   { directMessage: 'maya_sam', author: 'sam', day: 1, at: '16:52', body: 'Thursday works, same time.' },
   { channel: 'general', author: 'sam', day: 0, at: '08:41', body: 'The release notes are out.\nThanks for the reminder, Lena.' },
+  { channel: 'general', author: 'lena', day: 0, at: '08:50', body: '@Maya Jansen do they cover the new export?', mentions: ['maya'], replyTo: 'The release notes are out.\nThanks for the reminder, Lena.' },
+  { channel: 'general', author: 'maya', day: 0, at: '08:58', body: 'They do, under "What is new".', replyTo: 'The release notes are out.\nThanks for the reminder, Lena.' },
   { channel: 'general', author: 'maya', day: 0, at: '09:02', body: '@Lena Fischer @Sam Okafor stand-up moves to 10:00 today.', mentions: ['lena', 'sam'] },
   { channel: 'general', author: 'lena', day: 0, at: '09:03', body: 'Works for me.' },
   { channel: 'random', author: 'sam', day: 0, at: '10:30', body: 'Coffee machine on the second floor is fixed.' },

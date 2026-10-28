@@ -7,7 +7,7 @@ import { channels, directMessages, messages, owner, people, sentAt, workspace, t
  * Writes the demo workspace, leaving what is there already as it is, so it runs again without doubling anything: a
  * person, the workspace, a membership, a channel or a direct message that exists is kept, and one that has messages
  * gets none.
- * The developer's own account, the store's first, joins it as its admin. Answers the passwords of the people it created, which nobody can read again later.
+ * The developer's own account, the store's first, joins it as its admin and moderator. Answers the passwords of the people it created, which nobody can read again later.
  */
 export const seedDemoWorkspace = async (auth: AdminAuth, sql: postgres.Sql, today: Date) => {
   // The store's first account is always a superuser: it is the developer's own, never a demo person's.
@@ -29,11 +29,12 @@ export const seedDemoWorkspace = async (auth: AdminAuth, sql: postgres.Sql, toda
     if (!members.has(person.email)) await addMember(auth, { organization: workspace.slug, email: person.email, appRoles: ['participant'] })
   }
 
-  // The developer joins too, as the workspace's admin, so their own account sees the members' names and can invite.
+  // The developer joins too, as the workspace's admin and moderator, so their own account sees the members' names, can
+  // invite, and deletes anyone's messages.
   const accounts = await listUsers(auth)
   const developer = accounts.toSorted((a, b) => a.createdAt.localeCompare(b.createdAt))[0]!
   if (!members.has(developer.email)) {
-    await addMember(auth, { organization: workspace.slug, email: developer.email, role: 'admin', appRoles: ['participant'] })
+    await addMember(auth, { organization: workspace.slug, email: developer.email, role: 'admin', appRoles: ['moderator'] })
   }
 
   const users = new Map(accounts.map((user) => [user.email, user.id]))
@@ -43,14 +44,19 @@ export const seedDemoWorkspace = async (auth: AdminAuth, sql: postgres.Sql, toda
     // The demo's messages were said in the past: capturing none of its writes tells nobody of them as new.
     await tx`set local changes.capture = 'off'`
     // A conversation gets its messages only while it has none, so a second run adds none.
+    // A reply goes in the thread of the message of its place whose body it names, written before it.
     const post = async (column: 'channel_id' | 'direct_message_id', id: number, place: DemoMessage[]) => {
       const [found] = await tx<{ said: boolean }[]>`select exists (select from public.messages where ${tx(column)} = ${id}) as said`
       if (found!.said) return
+      const written = new Map<string, number>()
       for (const message of place) {
-        await tx`
-          insert into public.messages (organization_id, ${tx(column)}, author_id, body, mentions, sent_at)
-          values (${organization.id}, ${id}, ${userId(message.author)}, ${message.body},
-            ${tx.json((message.mentions ?? []).map(userId))}, ${sentAt(message, today)})`
+        const threadId = message.replyTo === undefined ? null : written.get(message.replyTo)!
+        const [row] = await tx<{ id: number }[]>`
+          insert into public.messages (organization_id, ${tx(column)}, thread_id, author_id, body, mentions, sent_at)
+          values (${organization.id}, ${id}, ${threadId}, ${userId(message.author)}, ${message.body},
+            ${tx.json((message.mentions ?? []).map(userId))}, ${sentAt(message, today)})
+          returning id`
+        written.set(message.body, row!.id)
       }
     }
 
