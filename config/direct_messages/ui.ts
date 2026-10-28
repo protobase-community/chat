@@ -7,8 +7,9 @@ const DirectMessageChat = component('DirectMessageChat')
 
 /**
  * The reader's direct messages, listed in the sidebar under "Direct messages", each named after the other people in it
- * (the `memberNames` title of protobase.ui.tsx), with "New message" under them. New starts one with the people picked;
- * its page is its chat. One with unread messages shows bold, with their count (the `unread` marks).
+ * (the `memberNames` title of protobase.ui.tsx), with "New message" under them. New starts one with the people picked, or
+ * opens the one they have; its page is its chat. One with unread messages shows bold, with their count (the `unread`
+ * marks).
  */
 export const directMessagesView = view<typeof directMessages>('direct_messages')
   .names({ singular: 'Message', plural: 'Direct messages' })
