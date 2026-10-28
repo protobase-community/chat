@@ -55,8 +55,6 @@ app on it with `protobase dev`.
 
 <gap>Starting a direct message with the same people again cannot open the one they have because Protobase's create form opening the existing record on a duplicate is not implemented.</gap> The form refuses it as a duplicate, and the sidebar lists the one they have.
 
-<gap>The sidebar cannot offer "New message" under Direct messages because a sidebar entry for a resource's create form is not implemented in Protobase.</gap> **New message** on the Direct messages list starts one.
-
 <gap>The sidebar cannot mark more than a person's first 100 channels and 100 direct messages because unread counts over more conversations are not implemented.</gap>
 
 <gap>A conversation with more unread messages than one page of 50 cannot show its "New messages" line because opening on a message before the latest page is not implemented.</gap> It opens at the end, still bold in the sidebar until read there.
@@ -116,6 +114,9 @@ app on it with `protobase dev`.
   changes the name, topic and members, and
   `nav({ recent: { orderBy: 'name asc', limit: 20 } })` lists the channels under the sidebar's Channels entry
   ([recent records](https://docs.protobase.net/reference/sidebar/#recent-records)).
+- **"New message" in the sidebar.** `create: { label: 'New message' }` in the `nav` of `config/direct_messages/ui.ts`
+  puts a link to the create form under the sidebar's Direct messages entry, for whoever may start one
+  ([create link](https://docs.protobase.net/reference/sidebar/#create-link)).
 - **Each reader's name for a direct message.** `.titleFrom('memberNames', (r) => [r.member_ids])` in
   `config/direct_messages/ui.ts` titles a direct message by the `memberNames` rule of `protobase.ui.tsx`
   (`components/member-names.ts`): the names of the other people in it, so Maya sees "Sam Okafor" and Sam "Maya Jansen",
