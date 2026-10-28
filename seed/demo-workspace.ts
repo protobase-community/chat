@@ -40,6 +40,8 @@ export const seedDemoWorkspace = async (auth: AdminAuth, sql: postgres.Sql, toda
   const userId = (person: Person) => users.get(people[person].email)!
 
   await sql.begin(async (tx) => {
+    // The demo's messages were said in the past: capturing none of its writes tells nobody of them as new.
+    await tx`set local changes.capture = 'off'`
     // A conversation gets its messages only while it has none, so a second run adds none.
     const post = async (column: 'channel_id' | 'direct_message_id', id: number, place: DemoMessage[]) => {
       const [found] = await tx<{ said: boolean }[]>`select exists (select from public.messages where ${tx(column)} = ${id}) as said`
