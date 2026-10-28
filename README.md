@@ -47,8 +47,7 @@ app on it with `protobase dev`.
 | Message search, presence and typing indicators | Slack, Teams, WhatsApp, Discord | Later |
 | Voice and video calls | Slack, Teams, WhatsApp, Discord | Later, once Protobase has calling |
 
-<gap>A channel's page cannot show its chat yet because Protobase's hook for a workspace's members, which gives the authors' names and the people to mention, is not implemented.</gap>
-<gap>The sidebar cannot list the channels under its Channels entry yet because Protobase's recent records without a status are not implemented; the Channels list lists them.</gap>
+<gap>Old messages of someone who has left the workspace cannot show their name because Protobase's lookup of former members is not implemented.</gap>
 
 ## How Protobase builds it
 
@@ -76,7 +75,15 @@ app on it with `protobase dev`.
   `chatDayLabel` between messages that `sameChatDay` puts on different days; and `Composer`, whose `searchPeople` lists
   the members to mention and whose `onSend(text, mentionIds)` gives the ids each message keeps in `mentions`, for the
   unread and notification follow-ups. `components/` holds the page's own code: paging and following a channel's
-  messages (`use-channel-messages.ts`) and grouping them (`thread-rows.ts`).
+  messages (`use-channel-messages.ts`), grouping them (`thread-rows.ts`) and drawing them (`channel-chat.tsx`),
+  exported from `protobase.ui.tsx`.
+- **Names from the workspace's members.** A message stores its author and mentions as user ids;
+  [`useMembers()`](https://docs.protobase.net/reference/custom-components/#members-names) gives the members of the
+  workspace, by name and without their addresses, for the authors, the mentions and the people `@` lists (at most 8).
+- **The chat on the channel's page.** `l.custom(ChannelChat)` in `config/channels/ui.ts` puts the chat on the channel's
+  record page, with `.recordMode('read')` so the page reads as a chat and **Edit** changes the name and topic, and
+  `nav({ recent: { orderBy: 'name asc', limit: 20 } })` lists the channels under the sidebar's Channels entry
+  ([recent records](https://docs.protobase.net/reference/sidebar/#recent-records)).
 - **Records at their own address.** A channel is an ordinary record at `/channels/<id>`, created with the standard
   form (a name and an optional topic), so links and breadcrumbs work as for any record.
 - **The demo seed** (`seed/`) creates its people and workspace with Protobase's host functions (`createUser`,
