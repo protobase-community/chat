@@ -8,8 +8,9 @@ import { channels, directMessages, messages, owner, people, sentAt, workspace, t
  * person, the workspace, a membership, a channel or a direct message that exists is kept, and one that has messages
  * gets none.
  * The developer's own account, the store's first, joins it as its admin and moderator. Answers the passwords of the people it created, which nobody can read again later.
+ * `clear`, when given, runs first in the transaction that writes the conversations, with the workspace's id.
  */
-export const seedDemoWorkspace = async (auth: AdminAuth, sql: postgres.Sql, today: Date) => {
+export const seedDemoWorkspace = async (auth: AdminAuth, sql: postgres.Sql, today: Date, clear?: (tx: postgres.TransactionSql, organizationId: string) => Promise<void>) => {
   // The store's first account is always a superuser: it is the developer's own, never a demo person's.
   if (!(await hasUsers(auth))) throw new Error('Create your own account first: bun run protobase users create you@example.com --role admin --generate-password')
 
@@ -43,6 +44,7 @@ export const seedDemoWorkspace = async (auth: AdminAuth, sql: postgres.Sql, toda
   await sql.begin(async (tx) => {
     // The demo's messages were said in the past: capturing none of its writes tells nobody of them as new.
     await tx`set local changes.capture = 'off'`
+    await clear?.(tx, organization.id)
     // A conversation gets its messages only while it has none, so a second run adds none.
     // A reply goes in the thread of the message of its place whose body it names, written before it.
     const post = async (column: 'channel_id' | 'direct_message_id', id: number, place: DemoMessage[]) => {
