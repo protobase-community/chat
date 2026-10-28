@@ -236,8 +236,8 @@ app on it with `protobase dev`.
   composer stays at the bottom
   ([full-area record pages](https://docs.protobase.net/reference/ui-config/#full-area-record-pages)). Its header's
   **Details** (`conversation-header.tsx`) is an `AppLink` to the conversation's standard page, its address with
-  `standard: true`, read rather than a form with `.recordMode('read')`, where a private channel's members show and
-  **Edit** changes the name, topic and members. `nav({ recent: { orderBy: 'name asc', limit: 20 } })` lists the
+  `standard: true`, read rather than a form with `.recordMode('read')`, where a channel's topic and who reads it, a
+  private channel's members and a direct message's people show, and **Edit** changes the name, topic and members. `nav({ recent: { orderBy: 'name asc', limit: 20 } })` lists the
   channels under the sidebar's Channels entry
   ([recent records](https://docs.protobase.net/reference/sidebar/#recent-records)).
 - **"New message" in the sidebar.** `create: { label: 'New message' }` in the `nav` of `config/direct_messages/ui.ts`
