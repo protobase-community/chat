@@ -4,13 +4,14 @@ import { addMember, createOrganization, createUser } from '@protobase/server'
 import { root } from './chat-server'
 
 // Two workspaces over the test's database: Ana, Ben and Dan in Northwind, Cara alone in Southwind, each a participant,
-// and the superuser, a member of Northwind.
+// Eve, Northwind's admin with the Moderator role, and the superuser, a member of Northwind.
 
 const person = (email: string, name: string) => ({ email, name, password: randomBytes(12).toString('base64url') })
 export const ana = person('ana@example.com', 'Ana Silva')
 export const ben = person('ben@example.com', 'Ben Adeyemi')
 export const cara = person('cara@example.com', 'Cara Lindqvist')
 export const dan = person('dan@example.com', 'Dan Mwangi')
+export const eve = person('eve@example.com', 'Eve Moreau')
 /** The superuser, who holds every role, `*` included, in every workspace; a member of Northwind to work in it. */
 export const superuser = person('admin@example.com', 'Admin')
 
@@ -26,10 +27,12 @@ export const makeWorkspaces = async (databaseUrl: string, appUrl: string) => {
     ben: (await createUser(auth, ben)).id,
     cara: (await createUser(auth, cara)).id,
     dan: (await createUser(auth, dan)).id,
+    eve: (await createUser(auth, eve)).id,
   }
   await createOrganization(auth, { name: 'Northwind', slug: 'northwind', owner: ana.email })
   await addMember(auth, { organization: 'northwind', email: ben.email, appRoles: ['participant'] })
   await addMember(auth, { organization: 'northwind', email: dan.email, appRoles: ['participant'] })
+  await addMember(auth, { organization: 'northwind', email: eve.email, role: 'admin', appRoles: ['moderator'] })
   await addMember(auth, { organization: 'northwind', email: superuser.email })
   await createOrganization(auth, { name: 'Southwind', slug: 'southwind', owner: cara.email })
 

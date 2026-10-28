@@ -5,8 +5,9 @@ import { defineConfig } from '@protobase/config'
 export default defineConfig({
   name: 'Chat',
   auth: {
-    // `admin` is the superuser, in every workspace; `participant` is held per workspace, given with each invitation.
-    roles: { admin: 'Superuser', participant: 'Participant' },
+    // `admin` is the superuser, in every workspace; `participant` is held per workspace, given with each invitation, and
+    // `moderator` too, which a workspace's creator holds and gives to its admins: it deletes anyone's messages there.
+    roles: { admin: 'Superuser', participant: 'Participant', moderator: 'Moderator' },
     // A workspace is an organization: people join one by invitation and see only its channels and messages.
     organizations: { create: 'everyone' },
   },

@@ -15,8 +15,8 @@ const mine = (ctx: AccessContext) => where.eq('author_id', ctx.user!.id!)
  * public.messages: what people say in a channel or a direct message, exactly one of them, in its flow or, with
  * `thread_id`, as a reply in the thread of one of its messages. A message is posted into, and read in, only a
  * conversation its reader may read, so a private one's messages and replies stay with its members. Only its author, the
- * superuser too, edits or deletes it, and it stays where it was posted; it is not deleted while somebody replied to
- * it, which the database checks. Its files are its attachments.
+ * superuser too, edits it, and it stays where it was posted; its author deletes it, and so does a workspace's moderator,
+ * as long as nobody replied to it, which the database checks. Its files are its attachments.
  */
 export const messages = resource('messages')
   .table('messages')
@@ -43,13 +43,15 @@ export const messages = resource('messages')
   .primaryKey((r) => r.id)
   .tenant((r) => r.organization_id)
   .author((r) => r.author_id)
+  // Whose a message is, for `messages.delete.own`: a participant deletes their own, a moderator any they read.
+  .owner((r) => r.author_id)
   .parent((r) => r.channel_id, 'read')
   .parent((r) => r.direct_message_id, 'read')
   .validate((message) => ((message.channel_id == null) === (message.direct_message_id == null) ? [{ field: 'channel_id', message: 'Post a message into a channel or a direct message, one of them' }] : undefined))
   .validate((message) => (mentionIds(message.mentions) ? undefined : [{ field: 'mentions', message: `Mention at most ${maxMentions} people, by their user ids` }]))
   .access({
     update: roles.can('messages.update').and(mine),
-    delete: roles.can('messages.delete').and(mine),
+    delete: roles.can('messages.delete'),
   })
   // messages.created, which config/messages/notify.ts tells the people it mentions or writes to of.
   .events((e) => [e.created()])

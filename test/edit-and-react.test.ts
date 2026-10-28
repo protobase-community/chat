@@ -3,9 +3,9 @@ import { startChat, throwawayDatabase } from './chat-server'
 import { followLive } from './live-stream'
 import { ana, ben, dan, makeWorkspaces, superuser } from './workspaces'
 
-// Editing, deleting and reacting to messages as the running app enforces them, against Postgres: each person edits and
-// deletes only their own messages, reacts as themselves only where they read, and others hear of it live. Ana, Ben and
-// Dan share Northwind; Dan is not in Ana and Ben's private channel.
+// Editing, deleting and reacting to messages as the running app enforces them, against Postgres: each person edits only
+// their own messages and deletes only their own, but a moderator such as the superuser, reacts as themselves only where
+// they read, and others hear of it live. Ana, Ben and Dan share Northwind; Dan is not in Ana and Ben's private channel.
 
 type Headers = Record<string, string>
 type Who = 'ana' | 'ben' | 'dan' | 'superuser'
@@ -76,10 +76,11 @@ describe('editing a message', () => {
 })
 
 describe('deleting a message', () => {
-  it('is refused for anyone else’s message, the superuser’s too', async () => {
+  it('is refused for anyone else’s message, but to a moderator such as the superuser', async () => {
     const message = await say('ana', general.id, 'Keep this')
-    for (const who of ['ben', 'superuser'] as const) expect((await remove(who, `/messages/${message.id}`)).status).toBe(404)
+    for (const who of ['ben', 'dan'] as const) expect((await remove(who, `/messages/${message.id}`)).status).toBe(404)
     expect((await api(`/messages/${message.id}`, people.ana)).status).toBe(200)
+    expect((await remove('superuser', `/messages/${message.id}`)).status).toBe(204)
   })
 
   it('takes its author’s own message and its reactions away, which the others hear of live', async () => {

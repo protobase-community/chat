@@ -1,17 +1,15 @@
-import { f, resource, where, type AccessContext } from '@protobase/schema'
+import { f, resource } from '@protobase/schema'
 import { imageSize } from '@protobase/server'
 import { roles } from '../roles'
 import { maxFileBytes } from './limits'
 
-/** The row filter of the signed-in person's own attachments. */
-const mine = (ctx: AccessContext) => where.eq('author_id', ctx.user!.id!)
-
 /**
  * public.attachments: a file shared in a message, stored with Protobase's private file storage. Only those who read the
  * message list it or get its download link, so a private conversation's files stay with its members; only the message's
- * author adds one, which the database's foreign key holds, and none changes. Its author takes it back only together
- * with the message, which the database checks: a message keeps text or a file. It is written and deleted with its
- * message, so it is not live: the chat reads a message's files when the message shows.
+ * author adds one, which the database's foreign key holds, and none changes. Its author, or a workspace's moderator,
+ * takes it back, which the chat does only together with the message: the database keeps a message holding text or a
+ * file. It is written and deleted with its message, so it is not live: the chat reads a message's files when the
+ * message shows.
  */
 export const attachments = resource('attachments')
   .table('attachments')
@@ -28,8 +26,10 @@ export const attachments = resource('attachments')
   .primaryKey((r) => r.id)
   .tenant((r) => r.organization_id)
   .author((r) => r.author_id)
+  // Whose a file is, for `attachments.delete.own`: a participant deletes their own, a moderator any they read.
+  .owner((r) => r.author_id)
   .parent((r) => r.message_id, 'read')
   .access({
     update: () => false,
-    delete: roles.can('attachments.delete').and(mine),
+    delete: roles.can('attachments.delete'),
   })
