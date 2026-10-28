@@ -44,7 +44,8 @@ app on it with `protobase dev`.
 | Private channels, which only their members see, read and post in; their creator adds and takes off members | This version |
 | Direct messages between two or more people, under "Direct messages" and named after the other people | This version |
 | Starting a direct message with the same people again opens the one they have | Next: the first follow-up |
-| Unread conversations and the "New messages" line | The second follow-up |
+| Unread conversations in bold in the sidebar, with a count of unread mentions, or of a direct message's unread messages, updated live | This version |
+| Opening a conversation on a "New messages" line above the first unread message | This version |
 | Notifications for mentions and direct messages | The third follow-up |
 | Editing, deleting and reacting to messages | The fourth follow-up |
 | Files and images | The fifth follow-up |
@@ -55,6 +56,10 @@ app on it with `protobase dev`.
 <gap>Starting a direct message with the same people again cannot open the one they have because Protobase's create form opening the existing record on a duplicate is not implemented.</gap> The form refuses it as a duplicate, and the sidebar lists the one they have.
 
 <gap>The sidebar cannot offer "New message" under Direct messages because a sidebar entry for a resource's create form is not implemented in Protobase.</gap> **New message** on the Direct messages list starts one.
+
+<gap>The sidebar cannot mark more than a person's first 100 channels and 100 direct messages because unread counts over more conversations are not implemented.</gap>
+
+<gap>A conversation with more unread messages than one page of 50 cannot show its "New messages" line because opening on a message before the latest page is not implemented.</gap> It opens at the end, still bold in the sidebar until read there.
 
 <gap>Old messages of someone who has left the workspace cannot show their name because Protobase's lookup of former members is not implemented.</gap>
 
@@ -116,6 +121,19 @@ app on it with `protobase dev`.
   (`components/member-names.ts`): the names of the other people in it, so Maya sees "Sam Okafor" and Sam "Maya Jansen",
   in the sidebar, the breadcrumb and the page's heading
   ([titles per reader](https://docs.protobase.net/reference/ui-config/#titles-per-reader)).
+- **Unread, counted as each reader.** `read_positions` (`config/read_positions/data.ts`) keeps how far each person has
+  read each conversation, the newest message id: its read and update rules are the row filter `user_id = me`, the
+  superuser's too, `.author()` stamps the person, `.parent(..., 'read')` keeps it to a conversation they read, and a
+  database trigger only moves it forward, so an older tab never marks read messages unread. The sidebar's
+  `nav({ recent: { ..., marks: 'unread' } })` on channels and direct messages names the `unread` marks hook of
+  `protobase.ui.tsx` ([marks per reader](https://docs.protobase.net/reference/sidebar/#marks-per-reader)),
+  `components/use-unread-marks.ts`: as the signed-in person (`useSignedInUser()`), it lists their conversations and read
+  positions and counts the messages after those by others with `client.aggregate('messages', { groupBy: 'channel_id' })`,
+  once for the unread and once for those whose `mentions` hold them. The counts go through the messages API's own read
+  rules, so a private conversation someone is not in never counts, and it counts again whenever the live stream tells
+  of a message or read position changed. A conversation's page reads its position on opening and draws
+  `ChatDivider tone="new"` above the first message after it by someone else, which `ChatThread` opens on; its
+  `onReadToEnd` moves the position to the newest message once the reader is at the end while the page shows.
 - **Records at their own address.** A channel is an ordinary record at `/channels/<id>` and a direct message at
   `/direct_messages/<id>`, each created with the standard form, so links and breadcrumbs work as for any record.
 - **The demo seed** (`seed/`) creates its people and workspace with Protobase's host functions (`createUser`,
@@ -142,7 +160,7 @@ GitHub repository**. Protobase keeps the app in sync with the repository and dep
 `config/<name>/data.ts` and its screens in `config/<name>/ui.ts`, all exported from `config/index.ts`, and
 `protobase dev` and `protobase serve` serve the API and the app from them.
 
-- Tested with Protobase **0.55.0**, and CI runs against it. The app is bundled: the `@protobase/*` packages are dev
+- Tested with Protobase **0.55.4**, and CI runs against it. The app is bundled: the `@protobase/*` packages are dev
   dependencies in the caret range of that release, and dev, the build and the `db:*` scripts (`protobase run`) use the
   CLI's own copies, so a newer CLI within the range updates the app with no change to its files. `tsconfig.json`
   extends the `.protobase/tsconfig.json` that `protobase types` writes, so the editor types the CLI's copies too. To
