@@ -2,14 +2,15 @@ import { component } from '@protobase/layout'
 import { l, view } from '@protobase/schema'
 import type { channels } from './data'
 
-/** A channel's chat, drawn by components/channel-chat.tsx. */
+/** A channel's chat, its whole record page, drawn by components/channel-chat.tsx. */
 const ChannelChat = component('ChannelChat')
 
 /**
  * The workspace's channels the reader may read, listed in the sidebar by name: a member opens one to chat in it, or
  * starts one with a name, an optional topic and whether it is private, with its members. A channel's page is its chat,
- * read rather than a form, under a private channel's members, with Edit for its name, topic and members. One with
- * messages the reader has not read shows bold, with a count of those that mention them (the `unread` marks).
+ * filling the area; the chat links to its standard page, read rather than a form, with a private channel's members and
+ * Edit for its name, topic and members. One with messages the reader has not read shows bold, with a count of those that
+ * mention them (the `unread` marks).
  */
 export const channelsView = view<typeof channels>('channels')
   .names({ singular: 'Channel', plural: 'Channels' })
@@ -22,4 +23,5 @@ export const channelsView = view<typeof channels>('channels')
   }))
   .list((r) => ({ columns: [r.name, r.topic, r.kind], sort: [[r.name, 'asc']] }))
   .recordMode('read')
-  .layout((r) => [l.section('Members', [r.member_ids], { when: 'kind = "private"' }), l.custom(ChannelChat)])
+  .record({ component: ChannelChat })
+  .layout((r) => [l.section('Members', [r.member_ids], { when: 'kind = "private"' })])

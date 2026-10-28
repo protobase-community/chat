@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { ChatThread, useMembers, useSignedInUser } from '@protobase/ui'
 import type { Conversation } from './conversation'
 import { ConversationComposer } from './conversation-composer'
@@ -10,18 +10,18 @@ import { useMessageReactions } from './use-message-reactions'
 import { useNewLine } from './use-new-line'
 import { useReadPosition } from './use-read-position'
 
-type Props = { conversation: Conversation; topic?: string; empty: string; placeholder: string }
+type Props = { conversation: Conversation; header: ReactNode; empty: string; placeholder: string }
 
 /**
- * A conversation's chat: its messages outside threads, followed live, and the composer under them, with the thread the
- * reader opened beside them. The chat scrolls inside a box of the window's height, as the chat parts do, so the composer
- * stays in view while a reader goes back through it. It shows its messages once the reader's read position is there
+ * A conversation's chat, filling its record page: the header, its messages outside threads, followed live, and the
+ * composer under them, with the thread the reader opened beside them. The page does not scroll; the messages scroll in a
+ * box of their own, so the composer stays in view while a reader goes back through them. It shows its messages once the reader's read position is there
  * too, so it opens on the "New messages" line above the first one they have not read, and it moves their position to the
  * newest message whenever they have read to the end. Its messages carry their files, reactions and replies' count, and
  * the reader edits their own and deletes those they may. It listens to a `SharedLive` around it. Key it by the
  * conversation, so another one starts afresh.
  */
-export const ConversationChat = ({ conversation, topic, empty, placeholder }: Props) => {
+export const ConversationChat = ({ conversation, header, empty, placeholder }: Props) => {
   const chat = useConversationMessages(conversation)
   const [threadId, setThreadId] = useState<number>()
   const threadFirst = chat.messages.find((message) => message.id === threadId)
@@ -39,9 +39,9 @@ export const ConversationChat = ({ conversation, topic, empty, placeholder }: Pr
   }
   const error = chat.error ?? position.error ?? reactions.error ?? attachments.error
   return (
-    <div className="flex h-[70vh] min-h-80">
+    <div className="flex min-h-0">
       <div className="flex min-w-0 flex-1 flex-col">
-        {topic && <p className="pb-2 text-sm text-muted-foreground">{topic}</p>}
+        {header}
         <ChatThread
           length={ready ? chat.messages.length : 0}
           followKey={chat.sent}
@@ -67,7 +67,7 @@ export const ConversationChat = ({ conversation, topic, empty, placeholder }: Pr
           )}
         </ChatThread>
         {error !== undefined && <p className="px-4 text-sm text-danger-text">Could not read or change the messages. Reload the page to try again.</p>}
-        <div className="pt-3">
+        <div className="shrink-0 p-3">
           <ConversationComposer placeholder={placeholder} onSend={chat.send} />
         </div>
       </div>

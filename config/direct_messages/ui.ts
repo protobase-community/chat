@@ -1,15 +1,15 @@
 import { component } from '@protobase/layout'
-import { l, view } from '@protobase/schema'
+import { view } from '@protobase/schema'
 import type { directMessages } from './data'
 
-/** A direct message's chat, drawn by components/direct-message-chat.tsx. */
+/** A direct message's chat, its whole record page, drawn by components/direct-message-chat.tsx. */
 const DirectMessageChat = component('DirectMessageChat')
 
 /**
  * The reader's direct messages, listed in the sidebar under "Direct messages", each named after the other people in it
  * (the `memberNames` title of protobase.ui.tsx), with "New message" under them. New starts one with the people picked, or
- * opens the one they have; its page is its chat. One with unread messages shows bold, with their count (the `unread`
- * marks).
+ * opens the one they have; its page is its chat, filling the area, which links to its standard page with its people. One
+ * with unread messages shows bold, with their count (the `unread` marks).
  */
 export const directMessagesView = view<typeof directMessages>('direct_messages')
   .names({ singular: 'Message', plural: 'Direct messages' })
@@ -20,4 +20,4 @@ export const directMessagesView = view<typeof directMessages>('direct_messages')
   // A conversation is started by its people, not imported from a spreadsheet.
   .import(false)
   .recordMode('read')
-  .layout(() => [l.custom(DirectMessageChat)])
+  .record({ component: DirectMessageChat })
