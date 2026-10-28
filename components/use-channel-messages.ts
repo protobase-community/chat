@@ -24,7 +24,7 @@ export const useChannelMessages = (channelId: number) => {
   const read = useCallback(
     (where: string, orderBy: 'id asc' | 'id desc') =>
       client.list('messages', { filter: `channel_id = ${channelId}${where}`, orderBy, pageSize }).then((page) => ({
-        items: page.items.map((record) => toMessage(record as Record<string, unknown>)),
+        items: page.items.map((record) => toMessage(record)),
         more: page.nextPageToken !== '',
       })),
     [client, channelId],
@@ -77,7 +77,7 @@ export const useChannelMessages = (channelId: number) => {
   const send = useCallback(
     (body: string, mentions: string[]) => {
       setSent((count) => count + 1)
-      client.create('messages', { channel_id: channelId, body, mentions }).then((record) => add([toMessage(record as Record<string, unknown>)]), setError)
+      client.create('messages', { channel_id: channelId, body, mentions }).then((created) => add([toMessage(created.record)]), setError)
     },
     [client, channelId, add],
   )
