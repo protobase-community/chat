@@ -1,16 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useClient } from '@protobase/ui'
 import type { Conversation } from './conversation'
-import { mergeMessages, toMessage, type Message } from './message'
+import { changesOf } from './live-changes'
+import { dropMessages, mergeMessages, replaceMessages, toMessage, type Message } from './message'
 
 /** How many messages a page of the chat brings: the latest on opening, and each "Load earlier". */
 export const pageSize = 50
 
 /**
  * A conversation's messages, oldest first: the latest page on opening, earlier pages on `loadEarlier`, and new ones as
- * the live stream tells of them, read through the messages API with the reader's own access. `send` posts the reader's
- * message, and `sent` counts their sends, the thread's `followKey`. Its reads belong to one conversation: the component
- * that uses it is keyed by the conversation, so another one starts afresh.
+ * the live stream tells of them, read through the messages API with the reader's own access; an edited message is read
+ * again and a deleted one taken out as the stream tells of them too. `send` posts the reader's message, and `sent`
+ * counts their sends, the thread's `followKey`; `edit` and `remove` change and delete one of theirs. Its reads belong to
+ * one conversation: the component that uses it is keyed by the conversation, so another one starts afresh.
  */
 export const useConversationMessages = ({ field, id }: Conversation) => {
   const client = useClient()
@@ -19,8 +21,10 @@ export const useConversationMessages = ({ field, id }: Conversation) => {
   const [loadingEarlier, setLoadingEarlier] = useState(false)
   const [sent, setSent] = useState(0)
   const [error, setError] = useState<unknown>()
-  // The newest id read, so the live stream's news is read as what came after it.
+  // The newest id read, so the live stream's news is read as what came after it, and the oldest, so an edit before
+  // what was read is left for "Load earlier" to bring.
   const newest = useRef(0)
+  const oldest = useRef(Number.POSITIVE_INFINITY)
 
   const read = useCallback(
     (where: string, orderBy: 'id asc' | 'id desc') =>
@@ -33,13 +37,19 @@ export const useConversationMessages = ({ field, id }: Conversation) => {
 
   const add = useCallback((incoming: Message[]) => {
     setMessages((current) => mergeMessages(current, incoming))
-    for (const message of incoming) newest.current = Math.max(newest.current, message.id)
+    for (const message of incoming) {
+      newest.current = Math.max(newest.current, message.id)
+      oldest.current = Math.min(oldest.current, message.id)
+    }
   }, [])
+
+  const drop = useCallback((gone: ReadonlySet<number>) => setMessages((current) => dropMessages(current, gone)), [])
 
   const readLatest = useCallback(
     () =>
       read('', 'id desc').then(({ items, more }) => {
         newest.current = 0
+        oldest.current = Number.POSITIVE_INFINITY
         setMessages([])
         add(items)
         setHasEarlier(more)
@@ -53,15 +63,28 @@ export const useConversationMessages = ({ field, id }: Conversation) => {
     [read, add, readLatest],
   )
 
+  // The edited messages among those read, read again, replacing only those still shown: one deleted meanwhile stays out.
+  const readEdited = useCallback(
+    (keys: ReadonlySet<number>) => {
+      const wanted = [...keys].filter((key) => key >= oldest.current && key <= newest.current)
+      if (wanted.length === 0) return
+      return read(` AND in(id, ${wanted.join(', ')})`, 'id asc').then(({ items }) => setMessages((current) => replaceMessages(current, items)), setError)
+    },
+    [read],
+  )
+
   useEffect(() => {
     void readLatest()
     return client.live({
       onChanges: (changes) => {
-        if (changes.some((change) => change.resource === 'messages')) void readNewer()
+        const { created, updated, deleted } = changesOf(changes, 'messages')
+        if (deleted.size > 0) drop(deleted)
+        if (updated.size > 0) void readEdited(updated)
+        if (created) void readNewer()
       },
       onResync: () => void readLatest(),
     })
-  }, [client, readLatest, readNewer])
+  }, [client, readLatest, readNewer, readEdited, drop])
 
   const loadEarlier = useCallback(() => {
     const first = messages[0]
@@ -83,5 +106,16 @@ export const useConversationMessages = ({ field, id }: Conversation) => {
     [client, field, id, add],
   )
 
-  return { messages, hasEarlier, loadEarlier, loadingEarlier, send, sent, error }
+  const edit = useCallback(
+    (messageId: number, body: string, mentions: string[]) =>
+      client.update('messages', messageId, { body, mentions }, '*').then((updated) => setMessages((current) => replaceMessages(current, [toMessage(updated.record)])), setError),
+    [client],
+  )
+
+  const remove = useCallback(
+    (messageId: number) => client.remove('messages', messageId, { etag: '*' }).then(() => drop(new Set([messageId])), setError),
+    [client, drop],
+  )
+
+  return { messages, hasEarlier, loadEarlier, loadingEarlier, send, sent, edit, remove, error }
 }

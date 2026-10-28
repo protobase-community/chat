@@ -1,22 +1,37 @@
 import { Fragment } from 'react'
-import { ChatDivider, ChatMessage, MentionedText, chatDayLabel } from '@protobase/ui'
+import { ChatDivider, chatDayLabel } from '@protobase/ui'
+import { ConversationMessage, type MessageHandlers } from './conversation-message'
 import type { Message } from './message'
 import type { Person } from './people'
+import { reactionGroups, reactionsByMessage, type Reaction } from './reaction'
 import { threadRows } from './thread-rows'
 
-type Props = { messages: Message[]; member: (id: string) => Person | undefined; newLineAbove?: number }
+type Props = MessageHandlers & {
+  messages: Message[]
+  reactions: readonly Reaction[]
+  me: string
+  member: (id: string) => Person | undefined
+  newLineAbove?: number
+}
 
 /**
  * The thread's rows: a day divider where a day begins, the "New messages" line above the message `newLineAbove` names,
- * then each message under its author, a quick run of one person's grouped.
+ * then each message under its author, a quick run of one person's grouped, with its reactions.
  */
-export const ConversationMessages = ({ messages, member, newLineAbove }: Props) =>
-  threadRows(messages).map(({ message, newDay, continued }) => (
+export const ConversationMessages = ({ messages, reactions, me, member, newLineAbove, ...handlers }: Props) => {
+  const reactionsOf = reactionsByMessage(reactions)
+  return threadRows(messages).map(({ message, newDay, continued }) => (
     <Fragment key={message.id}>
       {newDay && <ChatDivider label={chatDayLabel(message.sent_at)} />}
       {message.id === newLineAbove && <ChatDivider tone="new" />}
-      <ChatMessage author={{ id: message.author_id, name: member(message.author_id)?.name }} time={message.sent_at} continued={continued && message.id !== newLineAbove}>
-        <MentionedText text={message.body} mentions={message.mentions.map((id) => ({ name: member(id)?.name }))} />
-      </ChatMessage>
+      <ConversationMessage
+        message={message}
+        continued={continued && message.id !== newLineAbove}
+        mine={message.author_id === me}
+        reactions={reactionGroups(reactionsOf.get(message.id) ?? [], me)}
+        member={member}
+        {...handlers}
+      />
     </Fragment>
   ))
+}

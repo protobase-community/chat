@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { mergeMessages, type Message } from './message'
 import { threadRows } from './thread-rows'
 
-const message = (id: number, author_id: string, sent_at: string): Message => ({ id, author_id, body: `Message ${id}`, mentions: [], sent_at })
+const message = (id: number, author_id: string, sent_at: string): Message => ({ id, author_id, body: `Message ${id}`, mentions: [], sent_at, edited_at: null })
 
 describe('threadRows', () => {
   it('groups one person’s messages of a few minutes', () => {
