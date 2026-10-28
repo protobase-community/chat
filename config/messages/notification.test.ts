@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { excerpt, excerptLength, notificationOf } from './notification'
+import { excerpt, excerptLength, filesAloneText, notificationOf } from './notification'
 
 describe('notificationOf', () => {
   it('names the sender and the channel, and opens the channel', () => {
@@ -10,6 +10,13 @@ describe('notificationOf', () => {
   it('names the sender of a direct message, and opens it', () => {
     const notification = notificationOf({ sender: 'Sam Okafor', body: 'Lunch?' }, { kind: 'direct_message', id: 7, memberIds: ['maya', 'sam'] }, 'http://localhost:5173')
     expect(notification).toEqual({ title: 'Sam Okafor sent you a direct message', body: 'Lunch?', url: 'http://localhost:5173/direct_messages/7' })
+  })
+})
+
+describe('notificationOf a message of files alone', () => {
+  it('says it holds files, having no text to start with', () => {
+    const notification = notificationOf({ sender: 'Sam Okafor', body: null }, { kind: 'direct_message', id: 7, memberIds: ['maya', 'sam'] }, 'http://localhost:5173')
+    expect(notification.body).toBe(filesAloneText)
   })
 })
 

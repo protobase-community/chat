@@ -1,3 +1,5 @@
 node_modules
 dist
 .env
+# Uploaded files, where `protobase dev` and `protobase serve` keep them by default
+/data/
