@@ -43,7 +43,7 @@ app on it with `protobase dev`.
 | @mentions of the workspace's members, picked out in the message | This version |
 | Private channels, which only their members see, read and post in; their creator adds and takes off members | This version |
 | Direct messages between two or more people, under "Direct messages" and named after the other people | This version |
-| Starting a direct message with the same people again opens the one they have | Next: the first follow-up |
+| Starting a direct message with the same people again opens the one they have | This version |
 | Unread conversations in bold in the sidebar, with a count of unread mentions, or of a direct message's unread messages, updated live | This version |
 | Opening a conversation on a "New messages" line above the first unread message | This version |
 | Notifications for mentions and direct messages | The third follow-up |
@@ -52,8 +52,6 @@ app on it with `protobase dev`.
 | Threads | The sixth follow-up |
 | Message search, presence and typing indicators | Later |
 | Voice and video calls | Later, once Protobase has calling |
-
-<gap>Starting a direct message with the same people again cannot open the one they have because Protobase's create form opening the existing record on a duplicate is not implemented.</gap> The form refuses it as a duplicate, and the sidebar lists the one they have.
 
 <gap>The sidebar cannot mark more than a person's first 100 channels and 100 direct messages because unread counts over more conversations are not implemented.</gap>
 
@@ -92,6 +90,11 @@ app on it with `protobase dev`.
   ([records that belong to another](https://docs.protobase.net/reference/access/#records-that-belong-to-another)).
 - **One direct message per set of people.** `direct_messages.member_key`, a column the database generates from the
   sorted members, is unique in a workspace, so starting one again with the same people is refused with a `409`.
+- **Starting it again opens the one they have.** `.openExisting((r) => [r.organization_id, r.member_key])` in
+  `config/direct_messages/data.ts` names that unique key, so the `409` gives its key to a caller who reads the
+  conversation, and the create form opens it instead of saying it could not save. Someone outside it gets the plain
+  `409`, though the starter is always in the set, so they never repeat one they are not in
+  ([opening an existing record](https://docs.protobase.net/reference/data-config/#opening-an-existing-record)).
 - **Live updates.** `.live()` on channels, direct messages and messages, with the jobs schema and change capture that
   `protobase migration` wrote (`db/migrations/008_jobs.sql` and `009_changes.sql`), tells each open page which records
   changed, only of its own workspace and never their values; the chat follows the stream with `client.live` and reads

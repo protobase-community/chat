@@ -139,9 +139,11 @@ describe('a direct message', () => {
     expect(new Set(conversation.member_ids)).toEqual(new Set([ids.ana, ids.ben]))
   })
 
-  it('is one conversation for one set of people, however it is started again', async () => {
+  it('is one conversation for one set of people, which starting it again names to its people', async () => {
     for (const [who, members] of [['ana', [ids.ben]], ['ben', [ids.ana]], ['ana', [ids.ben, ids.ana, ids.ben]]] as const) {
-      expect((await send('POST', '/direct_messages', people[who], { member_ids: members })).status).toBe(409)
+      const answer = await send('POST', '/direct_messages', people[who], { member_ids: members })
+      expect(answer.status).toBe(409)
+      expect(String((await answer.json()).existing?.key)).toBe(String(conversation.id))
     }
     expect((await listed('/direct_messages', 'ana')).map((each) => each.id)).toEqual([conversation.id])
   })
@@ -165,6 +167,17 @@ describe('a direct message', () => {
 
   it('never changes who it is between', async () => {
     expect([403, 404, 405]).toContain((await change(`/direct_messages/${conversation.id}`, 'ana', { member_ids: [ids.ben, ids.dan] })).status)
+  })
+
+  // After the cases that need Dan in no conversation: the starter is always in the set, so Dan's is never this one.
+  it('is never named to someone outside it who picks its people, who gets a conversation of their own', async () => {
+    const started = await created(await send('POST', '/direct_messages', people.dan, { member_ids: [ids.ana, ids.ben] }))
+    expect(started.id).not.toBe(conversation.id)
+    const again = await send('POST', '/direct_messages', people.dan, { member_ids: [ids.ben, ids.ana] })
+    expect(again.status).toBe(409)
+    const named = (await again.json()).existing?.key
+    expect(String(named)).toBe(String(started.id))
+    expect((await api(`/direct_messages/${named}`, people.dan)).status).toBe(200)
   })
 
   it('tells its people of a new message, which someone outside it cannot read', async () => {
