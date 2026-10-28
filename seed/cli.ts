@@ -2,7 +2,8 @@ import { loadProjectAuth } from '@protobase/cli/auth'
 import { connect } from '../db/connection'
 import { seedDemoWorkspace } from './demo-workspace'
 
-// `bun run seed`: the demo workspace, with #general and #random, three people and their conversation.
+// `bun run seed`: the demo workspace, with #general, #random, the private #launch, a direct message, three people and
+// their conversation.
 
 const auth = await loadProjectAuth(process.cwd())
 const sql = connect({ max: 1 })

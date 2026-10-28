@@ -44,14 +44,14 @@ export const throwawayDatabase = async () => {
   return { databaseUrl, drop }
 }
 
-/** `protobase dev` on a free port over `databaseUrl`, once it answers. */
-export const startChat = async (databaseUrl: string) => {
+/** `protobase dev` on a free port over `databaseUrl`, once it answers; `env` adds to its environment. */
+export const startChat = async (databaseUrl: string, env: Record<string, string> = {}) => {
   const port = await freePort()
   const url = `http://localhost:${port}`
   const cacheDir = mkdtempSync(join(tmpdir(), 'chat-vite-'))
   const child = spawn(protobase, ['dev', '--port', String(port), '--cache-dir', cacheDir], {
     cwd: root,
-    env: { ...process.env, DATABASE_URL: databaseUrl, PROTOBASE_URL: url },
+    env: { ...process.env, ...env, DATABASE_URL: databaseUrl, PROTOBASE_URL: url },
     stdio: ['ignore', 'pipe', 'pipe'],
   })
   let output = ''

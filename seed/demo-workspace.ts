@@ -1,11 +1,12 @@
 import { randomBytes } from 'node:crypto'
 import type postgres from 'postgres'
 import { addMember, createOrganization, createUser, hasUsers, listOrganizations, listUsers, type AdminAuth } from '@protobase/server'
-import { channels, messages, owner, people, sentAt, workspace, type Person } from './demo-data'
+import { channels, directMessages, messages, owner, people, sentAt, workspace, type DemoChannel, type DemoMessage, type Person } from './demo-data'
 
 /**
  * Writes the demo workspace, leaving what is there already as it is, so it runs again without doubling anything: a
- * person, the workspace, a membership or a channel that exists is kept, and a channel that has messages gets none.
+ * person, the workspace, a membership, a channel or a direct message that exists is kept, and one that has messages
+ * gets none.
  * The developer's own account, the store's first, joins it as its admin. Answers the passwords of the people it created, which nobody can read again later.
  */
 export const seedDemoWorkspace = async (auth: AdminAuth, sql: postgres.Sql, today: Date) => {
@@ -39,21 +40,44 @@ export const seedDemoWorkspace = async (auth: AdminAuth, sql: postgres.Sql, toda
   const userId = (person: Person) => users.get(people[person].email)!
 
   await sql.begin(async (tx) => {
-    for (const channel of channels) {
-      await tx`
-        insert into public.channels (organization_id, name, topic, author_id)
-        values (${organization.id}, ${channel.name}, ${channel.topic}, ${userId(owner)})
-        on conflict (organization_id, name) do nothing`
-      const [row] = await tx<{ id: number; said: boolean }[]>`
-        select id, exists (select from public.messages m where m.channel_id = c.id) as said
-        from public.channels c where c.organization_id = ${organization.id} and c.name = ${channel.name}`
-      if (row!.said) continue
-      for (const message of messages.filter((each) => each.channel === channel.name)) {
+    // A conversation gets its messages only while it has none, so a second run adds none.
+    const post = async (column: 'channel_id' | 'direct_message_id', id: number, place: DemoMessage[]) => {
+      const [found] = await tx<{ said: boolean }[]>`select exists (select from public.messages where ${tx(column)} = ${id}) as said`
+      if (found!.said) return
+      for (const message of place) {
         await tx`
-          insert into public.messages (organization_id, channel_id, author_id, body, mentions, sent_at)
-          values (${organization.id}, ${row!.id}, ${userId(message.author)}, ${message.body},
+          insert into public.messages (organization_id, ${tx(column)}, author_id, body, mentions, sent_at)
+          values (${organization.id}, ${id}, ${userId(message.author)}, ${message.body},
             ${tx.json((message.mentions ?? []).map(userId))}, ${sentAt(message, today)})`
       }
+    }
+
+    // A private channel's members are Maya's pick; the database adds Maya, its creator, as it does for the app.
+    for (const channel of channels as readonly DemoChannel[]) {
+      const kind = channel.members ? 'private' : 'public'
+      const members = channel.members ? tx.json(channel.members.map(userId)) : null
+      const [found] = await tx<{ id: number }[]>`
+        select id from public.channels where organization_id = ${organization.id} and name = ${channel.name} and kind = ${kind}`
+      const [row] = found
+        ? [found]
+        : await tx<{ id: number }[]>`
+            insert into public.channels (organization_id, name, topic, author_id, kind, member_ids)
+            values (${organization.id}, ${channel.name}, ${channel.topic}, ${userId(owner)}, ${kind}, ${members})
+            returning id`
+      await post('channel_id', row!.id, messages.filter((message) => 'channel' in message && message.channel === channel.name))
+    }
+
+    for (const [key, members] of Object.entries(directMessages)) {
+      const ids = tx.json(members.map(userId))
+      const [found] = await tx<{ id: number }[]>`
+        select id from public.direct_messages where organization_id = ${organization.id} and member_key = public.member_key(${ids})`
+      const [row] = found
+        ? [found]
+        : await tx<{ id: number }[]>`
+            insert into public.direct_messages (organization_id, member_ids, author_id)
+            values (${organization.id}, ${ids}, ${userId(members[0])})
+            returning id`
+      await post('direct_message_id', row!.id, messages.filter((message) => 'directMessage' in message && message.directMessage === key))
     }
   })
 

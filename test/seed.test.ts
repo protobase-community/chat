@@ -26,7 +26,7 @@ const counts = async () => {
   const [row] = await sql`
     select (select count(*)::int from auth."user") as users, (select count(*)::int from auth.organization) as workspaces,
       (select count(*)::int from auth.member) as members, (select count(*)::int from public.channels) as channels,
-      (select count(*)::int from public.messages) as messages`
+      (select count(*)::int from public.direct_messages) as direct_messages, (select count(*)::int from public.messages) as messages`
   return row
 }
 
@@ -36,13 +36,13 @@ describe('the demo seed', () => {
     await expect(seedDemoWorkspace(auth, sql, new Date())).rejects.toThrow(/Create your own account first/)
   })
 
-  it('writes a workspace with #general and #random, three people, the developer and their conversation, once', async () => {
+  it('writes a workspace with #general, #random, the private #launch, a direct message, three people, the developer and their conversation, once', async () => {
     const auth = await loadProjectAuth(root)
     await createUser(auth, { email: 'dev@example.com', role: 'admin' })
     const created = await seedDemoWorkspace(auth, sql, new Date())
     expect(created.map((person) => person.email)).toEqual(Object.values(people).map((person) => person.email))
     const first = await counts()
-    expect(first).toEqual({ users: 4, workspaces: 1, members: 4, channels: 2, messages: messages.length })
+    expect(first).toEqual({ users: 4, workspaces: 1, members: 4, channels: 3, direct_messages: 1, messages: messages.length })
 
     expect(await seedDemoWorkspace(auth, sql, new Date())).toEqual([])
     expect(await counts()).toEqual(first)
@@ -52,6 +52,19 @@ describe('the demo seed', () => {
     const [row] = await sql`
       select m.role from auth.member m join auth."user" u on u.id = m.user_id where u.email = 'dev@example.com'`
     expect(row).toEqual({ role: 'admin' })
+  })
+
+  it('keeps the private channel and the direct message to Maya and Sam', async () => {
+    const rows = await sql<{ name: string | null; members: string[] }[]>`
+      select c.name, array(select u.email from jsonb_array_elements_text(c.member_ids) as m (id) join auth."user" u on u.id = m.id order by u.email) as members
+      from public.channels c where c.kind = 'private'
+      union all
+      select null, array(select u.email from jsonb_array_elements_text(d.member_ids) as m (id) join auth."user" u on u.id = m.id order by u.email)
+      from public.direct_messages d`
+    expect(rows).toEqual([
+      { name: 'launch', members: ['maya@example.com', 'sam@example.com'] },
+      { name: null, members: ['maya@example.com', 'sam@example.com'] },
+    ])
   })
 
   it('stores each mention as the id of the person named', async () => {

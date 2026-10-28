@@ -2,6 +2,8 @@
 export { usersPage } from '@protobase/layout'
 export * from './channels/data'
 export * from './channels/ui'
+export * from './direct_messages/data'
+export * from './direct_messages/ui'
 export * from './messages/data'
 export * from './messages/ui'
 export { accountMenu } from './user-menu'

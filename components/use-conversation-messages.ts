@@ -1,17 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useClient } from '@protobase/ui'
+import type { Conversation } from './conversation'
 import { mergeMessages, toMessage, type Message } from './message'
 
 /** How many messages a page of the chat brings: the latest on opening, and each "Load earlier". */
 export const pageSize = 50
 
 /**
- * A channel's messages, oldest first: the latest page on opening, earlier pages on `loadEarlier`, and new ones as the
- * live stream tells of them, read through the messages API with the reader's own access. `send` posts the reader's
- * message, and `sent` counts their sends, the thread's `followKey`. Its reads belong to one channel: the component
- * that uses it is keyed by the channel (`key={channelId}`), so another channel starts afresh.
+ * A conversation's messages, oldest first: the latest page on opening, earlier pages on `loadEarlier`, and new ones as
+ * the live stream tells of them, read through the messages API with the reader's own access. `send` posts the reader's
+ * message, and `sent` counts their sends, the thread's `followKey`. Its reads belong to one conversation: the component
+ * that uses it is keyed by the conversation, so another one starts afresh.
  */
-export const useChannelMessages = (channelId: number) => {
+export const useConversationMessages = ({ field, id }: Conversation) => {
   const client = useClient()
   const [messages, setMessages] = useState<Message[]>([])
   const [hasEarlier, setHasEarlier] = useState(false)
@@ -23,11 +24,11 @@ export const useChannelMessages = (channelId: number) => {
 
   const read = useCallback(
     (where: string, orderBy: 'id asc' | 'id desc') =>
-      client.list('messages', { filter: `channel_id = ${channelId}${where}`, orderBy, pageSize }).then((page) => ({
+      client.list('messages', { filter: `${field} = ${id}${where}`, orderBy, pageSize }).then((page) => ({
         items: page.items.map((record) => toMessage(record)),
         more: page.nextPageToken !== '',
       })),
-    [client, channelId],
+    [client, field, id],
   )
 
   const add = useCallback((incoming: Message[]) => {
@@ -77,9 +78,9 @@ export const useChannelMessages = (channelId: number) => {
   const send = useCallback(
     (body: string, mentions: string[]) => {
       setSent((count) => count + 1)
-      client.create('messages', { channel_id: channelId, body, mentions }).then((created) => add([toMessage(created.record)]), setError)
+      client.create('messages', { [field]: id, body, mentions }).then((created) => add([toMessage(created.record)]), setError)
     },
-    [client, channelId, add],
+    [client, field, id, add],
   )
 
   return { messages, hasEarlier, loadEarlier, loadingEarlier, send, sent, error }

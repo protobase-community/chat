@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { channels, messages, people, sentAt } from './demo-data'
+import { channels, directMessages, messages, people, sentAt } from './demo-data'
 
 describe('the demo conversation', () => {
   const today = new Date('2026-10-27T15:00:00Z')
@@ -10,8 +10,15 @@ describe('the demo conversation', () => {
     expect(new Set(times.map((time) => time.slice(0, 10)))).toEqual(new Set(['2026-10-26', '2026-10-27']))
   })
 
-  it('happens in #general and #random', () => {
-    expect(new Set(messages.map((message) => message.channel))).toEqual(new Set(channels.map((channel) => channel.name)))
+  it('happens in every channel and direct message', () => {
+    const places = messages.map((message) => ('channel' in message ? `#${message.channel}` : message.directMessage))
+    expect(new Set(places)).toEqual(new Set([...channels.map((channel) => `#${channel.name}`), ...Object.keys(directMessages)]))
+  })
+
+  it('keeps the private channel and the direct message to Maya and Sam, so Lena sees neither', () => {
+    const privateOnes = channels.filter((channel) => 'members' in channel)
+    expect(privateOnes.map((channel) => channel.members)).toEqual([['maya', 'sam']])
+    expect(Object.values(directMessages)).toEqual([['maya', 'sam']])
   })
 
   it('writes each mention as @ and the name of a person it lists', () => {
