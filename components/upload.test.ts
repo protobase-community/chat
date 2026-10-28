@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { maxFileBytes, maxFilesPerMessage } from '../config/attachments/limits'
-import { isUploading, ticketsOf, uploadsOf, type Upload } from './upload'
+import { hasFilesToSend, isUploading, ticketsOf, uploadsOf, type Upload } from './upload'
 
 const file = (name: string, size = 1_000) => ({ name, size })
 
@@ -35,5 +35,21 @@ describe('ticketsOf and isUploading', () => {
     ]
     expect(ticketsOf(uploads)).toEqual(['t1'])
     expect(uploads.map(isUploading)).toEqual([false, true, false])
+  })
+})
+
+describe('hasFilesToSend', () => {
+  const done: Upload = { key: 1, name: 'shot.png', size: 1, sent: 1, ticket: 't1' }
+  const onTheWay: Upload = { key: 2, name: 'doc.pdf', size: 1, sent: 0 }
+  const refused: Upload = { key: 3, name: 'video.mov', size: 1, sent: 0, refusal: 'Too large' }
+
+  it('lets the message go without text once its files are uploaded', () => {
+    expect(hasFilesToSend([done, refused])).toBe(true)
+  })
+
+  it('keeps a message without text from going with no files, only refused ones, or one still on its way', () => {
+    expect(hasFilesToSend([])).toBe(false)
+    expect(hasFilesToSend([refused])).toBe(false)
+    expect(hasFilesToSend([done, onTheWay])).toBe(false)
   })
 })

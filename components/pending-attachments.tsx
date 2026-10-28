@@ -5,12 +5,10 @@ import type { Upload } from './upload'
 type Props = {
   uploads: readonly Upload[]
   onRemove: (key: number) => void
-  /** Sends the files without text; given once they are all uploaded. */
-  onSendFiles?: () => void
 }
 
-/** The files picked for the next message above the composer: each with its size, how far its upload is, or why it was refused. */
-export const PendingAttachments = ({ uploads, onRemove, onSendFiles }: Props) => (
+/** The files picked, pasted or dropped for the next message, in the composer above its box: each with its size, how far its upload is, or why it was refused. */
+export const PendingAttachments = ({ uploads, onRemove }: Props) => (
   <div className="flex flex-wrap items-center gap-2">
     {uploads.map((upload) => (
       <span key={upload.key} className="flex items-center gap-1 rounded-md border border-border py-0.5 pl-2 text-sm">
@@ -21,11 +19,6 @@ export const PendingAttachments = ({ uploads, onRemove, onSendFiles }: Props) =>
         </Button>
       </span>
     ))}
-    {onSendFiles && (
-      <Button type="button" size="sm" variant="primary" onClick={onSendFiles}>
-        Send without text
-      </Button>
-    )}
   </div>
 )
 

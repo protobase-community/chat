@@ -22,3 +22,6 @@ export const isUploading = (upload: Upload) => upload.ticket === undefined && up
 
 /** The tickets of the uploads that are done, to send as the message's files. */
 export const ticketsOf = (uploads: readonly Upload[]) => uploads.flatMap((upload) => (upload.ticket === undefined ? [] : [upload.ticket]))
+
+/** Whether the message may go without text: a file is uploaded and none is still on its way. */
+export const hasFilesToSend = (uploads: readonly Upload[]) => !uploads.some(isUploading) && ticketsOf(uploads).length > 0

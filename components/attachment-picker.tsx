@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import { Button } from '@protobase/ui'
 
-/** A button beside the composer that opens the browser's file picker, giving the files the reader picks. */
+/** A button in the composer that opens the browser's file picker, giving the files the reader picks. */
 export const AttachmentPicker = ({ onPick }: { onPick: (files: File[]) => void }) => {
   const input = useRef<HTMLInputElement>(null)
   return (
