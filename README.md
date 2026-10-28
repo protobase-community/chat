@@ -1,7 +1,7 @@
 # Chat
 
 A team chat app built on Protobase: a team signs in to its workspace, talks in channels, private channels and direct
-messages, and sees each other's messages arrive live, with @mentions, shared files and images, and notifications of them. Start from it for a chat of your own, or read it to see how Protobase builds one:
+messages, and sees each other's messages arrive live, with @mentions, threads, shared files and images, and notifications of them. Start from it for a chat of your own, or read it to see how Protobase builds one:
 everything below is Protobase's own features, with one piece of server code of the app's own, the subscription that
 notifies people of messages.
 
@@ -21,13 +21,16 @@ bun run dev                       # http://localhost:5173
 The seed prints the passwords of the three demo people (`maya@example.com`, `sam@example.com` and
 `lena@example.com`), once, when it creates them: sign in as two of them in two browsers to chat. Maya and Sam share
 the private #launch and a direct message, which Lena and your own account do not see. Your own account
-joins the demo workspace as its admin, so you see the chat as a member too and can invite others from its Members page.
+joins the demo workspace as its admin and moderator, so you see the chat as a member too, can invite others from its
+Members page, and can delete anyone's messages.
 It runs again without doubling anything, and needs your own account first, since the first account is always the
 superuser. Set your
 own `PROTOBASE_SECRET` in `.env` (`openssl rand -base64 32`): it also signs the files' upload tickets and download
 links. Shared files are kept in `data/files/private`, which git ignores. `bun run db:down` stops the database.
 
-Mention Sam as Maya, or write to Maya as Sam, and the other sees it in the bell in the top bar within a few seconds.
+Mention Sam as Maya, or write to Maya as Sam, and the other sees it in the bell in the top bar within a few seconds. In
+#general, Sam's release notes have a thread: open it from **2 replies** under the message, reply in it as one of them,
+and the other sees the count go up and, with the thread open, the reply arrive.
 For push to the browser too, generate the Web Push keys and put them in `.env`, with an address push services can reach
 you at, then start `bun run dev` again and press **Turn on** in the bell:
 
@@ -69,7 +72,8 @@ app on it with `protobase dev`.
 | Editing and deleting one's own messages, "(edited)" under a changed one, both reaching others live | This version |
 | Reacting with an emoji of a small set: each reaction's count under the message, who reacted on hover, one's own highlighted, live | This version |
 | Files in messages, with or without text: images shown as previews, any other file as its name and size to download, at most 10 of up to 20 MB each | This version |
-| Threads | The sixth follow-up |
+| Replying in a thread, in a panel beside the conversation, with mentions and files: the conversation shows under a message its number of replies and when the last came, both live | This version |
+| Workspace moderators, its owners and the admins they pick, who delete anyone's message in a conversation they read, never edit it | This version |
 | Message search, presence and typing indicators | Later |
 | Voice and video calls | Later, once Protobase has calling |
 
@@ -85,7 +89,11 @@ app on it with `protobase dev`.
 
 <gap>A message cannot notify a whole channel with @channel or @here because mentions of everyone in a conversation are not implemented.</gap>
 
-<gap>Nobody can delete another person's message, a workspace admin neither, because moderating messages is not implemented.</gap>
+<gap>Making someone a workspace admin cannot make them a moderator because app roles that follow the workspace role are not implemented.</gap> An owner gives them the Moderator role on the Members page.
+
+<gap>A thread's first message cannot be deleted while it has replies because keeping a deleted message's place in its thread is not implemented.</gap> Its replies go first, each deleted by its author or a moderator, so nobody's replies are deleted with it.
+
+<gap>A notification of a reply cannot open its thread because an address for a thread in its conversation's page is not implemented.</gap> It opens the conversation, where the thread's first message shows its replies.
 
 <gap>Mentioning someone in an edit cannot notify them because notifying of edited messages is not implemented.</gap> The edit does count in their unread mentions.
 
@@ -109,7 +117,7 @@ app on it with `protobase dev`.
   [organizations](https://docs.protobase.net/reference/auth/#organizations): people work in one at a time, are invited
   from its own **Members** and **Invitations** pages in the profile menu, and sign in with its own sign-in page. Give
   an invited person the **Participant** role, which `config/roles.ts` lets read and start channels and direct messages
-  and post in them.
+  and post in them, or the **Moderator** role, which does all that and deletes anyone's messages there.
   `create: 'everyone'` lets anyone signed in start a workspace of their own.
 - **Each workspace sees only its own.** Channels, direct messages and messages declare `.tenant((r) => r.organization_id)`
   ([data config](https://docs.protobase.net/reference/data-config/#resource)): every read is limited to the workspace
@@ -117,11 +125,31 @@ app on it with `protobase dev`.
 - **Nobody posts as someone else.** `.author((r) => r.author_id)` on channels, direct messages, messages and attachments, and
   `.author((r) => r.user_id)` on reactions, stamps the signed-in person's id on every create, and refuses a request
   that names the author.
-- **Only its author changes a message.** The messages' update and delete rules are the row filter `author_id = me`
-  (`config/messages/data.ts`), the superuser's too, so changing or deleting someone else's message is the `404` of a
-  key that does not exist, and `channel_id` and `direct_message_id` refuse updates, so a message stays in its
-  conversation. A database trigger stamps `edited_at` when its body or mentions change (`db/migrations/015_reactions.sql`),
+- **Only its author changes a message.** The messages' update rule is the row filter `author_id = me`
+  (`config/messages/data.ts`), the superuser's too, so changing someone else's message is the `404` of a key that does
+  not exist, and `channel_id`, `direct_message_id` and `thread_id` refuse updates, so a message stays where it was
+  posted. A database trigger stamps `edited_at` when its body or mentions change (`db/migrations/015_reactions.sql`),
   which the chat shows as "(edited)".
+- **Moderators delete, participants their own.** `.owner((r) => r.author_id)` on messages and attachments names whose a
+  record is, and `config/roles.ts` gives the Participant role `messages.delete.own` and `attachments.delete.own` and the
+  Moderator role `messages.delete` and `attachments.delete`
+  ([scoped capabilities](https://docs.protobase.net/reference/access/#capabilities)), so a participant's delete of
+  someone else's message is a `404` and a moderator's goes through, the superuser's `*` too. The conversation parents
+  still check every delete, so a moderator outside a private channel is refused with a `403`. Protobase's access rules
+  see a session's app role, never the workspace role (owner, admin or member), so moderating is a role of its own: a
+  workspace's creator holds every app role, Moderator included, and gives it to the admins they pick on the Members
+  page. A session acts with one role at a time, so the Moderator role holds a participant's capabilities too, and
+  someone holding both switches to it in the profile menu. A workspace made before this version gives its owners the
+  role with `bun run protobase organizations add-app-role moderator --to owners`.
+- **Threads are messages too.** A reply is a message of its channel or direct message with `thread_id`, its thread's
+  first message (`db/migrations/018_threads.sql`): it keeps its conversation, so the conversation parents decide who
+  reads and writes it exactly as for the conversation's other messages, and a non-member's list of a private thread
+  is empty. Composite foreign keys to the first message's `(id, channel_id)` and `(id, direct_message_id)` keep a reply
+  in its thread's conversation, refusing another with a `409`, and a trigger refuses a reply to a reply with a `400`,
+  so threads never nest. The conversation shows its flow, `isNull(thread_id)`, through an index of its messages
+  outside threads, and a thread its replies through one by `thread_id`. Triggers keep the first message's
+  `reply_count` and `last_reply_at`, so the change the live stream tells of that message brings its new count, and a
+  message with replies is not deleted (its foreign keys answer `409`): nobody's replies go with it.
 - **Reactions are records.** `reactions` (`config/reactions/data.ts`) holds one person's emoji under a message, an enum
   of six names that the chat draws from explicit labels (`components/emoji.ts`). `.parent((r) => r.message_id, 'read')`
   reads the message as the reactor would, its own conversation parents included, so only those who read a message
@@ -171,18 +199,23 @@ app on it with `protobase dev`.
   `protobase migration` wrote (`db/migrations/008_jobs.sql` and `009_changes.sql`), tells each open page which records
   changed, only of its own workspace and never their values; the chat follows the stream with `client.live` and reads
   the new messages through the API as its reader, so a private conversation's messages reach only its members ([live updates](https://docs.protobase.net/reference/live/)).
-  Each `client.live` holds one of the browser's few connections to the app, so attachments, written and deleted only with
-  their message, are not live: the chat reads a message's files when the message shows (`use-message-attachments.ts`).
+  Each `client.live` holds one of the browser's few connections to the app, so a conversation's page opens one,
+  `SharedLive` (`components/shared-live.tsx`), which its messages, its open thread's replies and their reactions all
+  listen to, and attachments, written and deleted only with their message, are not live: the chat reads a message's
+  files when the message shows (`use-message-attachments.ts`).
 - **The chat parts.** A channel's and a direct message's page are built from Protobase's
   [chat parts](https://docs.protobase.net/reference/custom-components/#chat-parts): `ChatThread`, which keeps the
   reader's place, goes to the end when they send (`followKey`) and offers earlier messages (`onLoadEarlier`);
   `ChatMessage` with the author, avatar, time and `continued` for a run of one person's messages, and its `footer`
-  for "(edited)" and the reactions, drawn as `Button`s, with a bar of `Button`s over a message to react, edit and
-  delete, `MentionBox` to edit it with its mentions, and `Dialog` to confirm a delete; `ChatDivider` with
+  for "(edited)" and the reactions, drawn as `Button`s, with a bar of `Button`s over a message to react, reply in its
+  thread, edit and delete, `MentionBox` to edit it with its mentions, and `Dialog` to confirm a delete; `SidePanel`
+  for the open thread beside the conversation, covering the screen on a phone, with a `ChatThread` and `Composer` of
+  its own; `ChatDivider` with
   `chatDayLabel` between messages that `sameChatDay` puts on different days; and `Composer`, whose `searchPeople` lists
   the members to mention and whose `onSend(text, mentionIds)` gives the ids each message keeps in `mentions`, which the
   unread counts and notifications read. `components/` holds the pages' own code: paging and following a conversation's
-  messages, an edit read again and a delete taken out as the live stream tells of them (`use-conversation-messages.ts`),
+  messages or a thread's replies, an edit read again and a delete taken out as the live stream tells of them
+  (`use-conversation-messages.ts`),
   their reactions and files (`use-message-records.ts`), grouping them (`thread-rows.ts`) and drawing them
   (`conversation-chat.tsx`), on a channel's page (`channel-chat.tsx`) and a direct message's
   (`direct-message-chat.tsx`), exported from `protobase.ui.tsx`.
@@ -209,7 +242,7 @@ app on it with `protobase dev`.
   `nav({ recent: { ..., marks: 'unread' } })` on channels and direct messages names the `unread` marks hook of
   `protobase.ui.tsx` ([marks per reader](https://docs.protobase.net/reference/sidebar/#marks-per-reader)),
   `components/use-unread-marks.ts`: as the signed-in person (`useSignedInUser()`), it lists their conversations and read
-  positions and counts the messages after those by others with `client.aggregate('messages', { groupBy: 'channel_id' })`,
+  positions and counts the messages of the flow, replies in threads left out, after those by others with `client.aggregate('messages', { groupBy: 'channel_id' })`,
   once for the unread and once for those whose `mentions` hold them. The counts go through the messages API's own read
   rules, so a private conversation someone is not in never counts, and it counts again whenever the live stream tells
   of a message or read position changed, so a deleted unread message drops out of the count. While it counts first, and
@@ -222,11 +255,11 @@ app on it with `protobase dev`.
   push to the browsers they turn it on in through Web Push, with the tables `protobase migration` wrote
   (`db/migrations/014_notifications.sql`). Messages declare `.events((e) => [e.created()])`, and the subscription
   `notifyOfMessages` (`config/messages/notify.ts`, exported from `config/index.ts`) runs on the server for each
-  `messages.created`, whoever wrote it: it tells the people the message mentions and a direct message's other members
-  (`told-of.ts`), never its author, of a private channel or direct message only its members, and of those only the
+  `messages.created`, whoever wrote it, a reply in a thread too: it tells the people the message mentions and a direct
+  message's other members (`told-of.ts`), never its author, of a private channel or direct message only its members, and of those only the
   workspace's members whose roles read messages, since a notification shows the message's start. It sends with
   `sendNotification(db, { userIds, inbox: true }, ...)`, a background job, a notification that names the sender, the
-  channel or a direct message and the message's start, and links to the conversation's record page on `PROTOBASE_URL`
+  channel or a direct message, whether in a thread, and the message's start, and links to the conversation's record page on `PROTOBASE_URL`
   (`notification.ts`). The demo seed turns change capture off while it writes, so its past messages notify nobody.
 - **Records at their own address.** A channel is an ordinary record at `/channels/<id>` and a direct message at
   `/direct_messages/<id>`, each created with the standard form, so links and breadcrumbs work as for any record.
