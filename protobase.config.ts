@@ -13,4 +13,6 @@ export default defineConfig({
   // No PostgREST-compatible API: it runs under the tables' row-level security, which these tables do not have, rather
   // than the resources' access rules, so a key set in the environment must not turn it on.
   apiKeys: false,
+  // The bell and browser push: config/messages/notify.ts tells people of the messages that mention them or write to them.
+  notifications: {},
 })
