@@ -101,6 +101,10 @@ app on it with `protobase dev`.
 
 <gap>A message cannot be answered with any emoji outside the six of the set because an emoji picker is not implemented.</gap>
 
+<gap>The message box cannot show that it takes the files dragged over it because a drop highlight in Protobase's `Composer` is not implemented.</gap> Dropping them on it still adds them.
+
+<gap>A file pasted outside the message box cannot be shared because taking pasted files anywhere else on the conversation's page is not implemented.</gap> Click into the box, then paste.
+
 <gap>A sent message's files cannot be added to or taken off because editing a message's files is not implemented.</gap> Deleting the message deletes them.
 
 <gap>A file's link on a page left open for over an hour cannot download it because renewing the signed links of an open conversation is not implemented.</gap> Reloading the page brings new ones.
