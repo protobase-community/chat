@@ -85,6 +85,8 @@ app on it with `protobase dev`.
 
 <gap>A conversation cannot be muted, nor a person's notifications paused, because notification settings are not implemented.</gap>
 
+<gap>A message cannot notify a whole channel with @channel or @here because mentions of everyone in a conversation are not implemented.</gap>
+
 <gap>Someone who has the conversation open still gets a notification of its new messages because telling whether it is in front of them is not implemented.</gap>
 
 ## How Protobase builds it
