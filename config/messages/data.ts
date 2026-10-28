@@ -18,10 +18,10 @@ export const messages = resource('messages')
     organization_id: f.text().readOnly(),
     channel_id: f.relation('channels').optional().filterable(),
     direct_message_id: f.relation('direct_messages').optional().filterable(),
-    author_id: f.text().readOnly(),
+    author_id: f.text().readOnly().filterable(),
     body: f.text().min(1).max(10_000),
     // The user ids of the people the message mentions, as the composer gives them: a JSON array, `[]` for none.
-    mentions: f.json(),
+    mentions: f.json().filterable(),
     sent_at: f.timestamp().readOnly().dbDefault(),
   })
   .primaryKey((r) => r.id)
