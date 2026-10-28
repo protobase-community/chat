@@ -65,7 +65,8 @@ app on it with `protobase dev`.
 | Unread conversations in bold in the sidebar, with a count of unread mentions, or of a direct message's unread messages, updated live | This version |
 | Opening a conversation on a "New messages" line above the first unread message | This version |
 | Notifications of mentions and direct messages in the bell and as browser push, opening the conversation | This version |
-| Editing, deleting and reacting to messages | The fourth follow-up |
+| Editing and deleting one's own messages, "(edited)" under a changed one, both reaching others live | This version |
+| Reacting with an emoji of a small set: each reaction's count under the message, who reacted on hover, one's own highlighted, live | This version |
 | Files and images | The fifth follow-up |
 | Threads | The sixth follow-up |
 | Message search, presence and typing indicators | Later |
@@ -83,6 +84,14 @@ app on it with `protobase dev`.
 
 <gap>A message cannot notify a whole channel with @channel or @here because mentions of everyone in a conversation are not implemented.</gap>
 
+<gap>Nobody can delete another person's message, a workspace admin neither, because moderating messages is not implemented.</gap>
+
+<gap>Mentioning someone in an edit cannot notify them because notifying of edited messages is not implemented.</gap> The edit does count in their unread mentions.
+
+<gap>A deleted message's notification cannot be taken back from the bell because withdrawing a sent notification is not implemented.</gap>
+
+<gap>A message cannot be answered with any emoji outside the six of the set because an emoji picker is not implemented.</gap>
+
 <gap>Someone who has the conversation open still gets a notification of its new messages because telling whether it is in front of them is not implemented.</gap>
 
 ## How Protobase builds it
@@ -96,8 +105,20 @@ app on it with `protobase dev`.
 - **Each workspace sees only its own.** Channels, direct messages and messages declare `.tenant((r) => r.organization_id)`
   ([data config](https://docs.protobase.net/reference/data-config/#resource)): every read is limited to the workspace
   the session works in, and every create is stamped with it; no request may set it.
-- **Nobody posts as someone else.** `.author((r) => r.author_id)` on channels, direct messages and messages stamps the signed-in person's
-  id on every create, and refuses a request that names the author.
+- **Nobody posts as someone else.** `.author((r) => r.author_id)` on channels, direct messages and messages, and
+  `.author((r) => r.user_id)` on reactions, stamps the signed-in person's id on every create, and refuses a request
+  that names the author.
+- **Only its author changes a message.** The messages' update and delete rules are the row filter `author_id = me`
+  (`config/messages/data.ts`), the superuser's too, so changing or deleting someone else's message is the `404` of a
+  key that does not exist, and `channel_id` and `direct_message_id` refuse updates, so a message stays in its
+  conversation. A database trigger stamps `edited_at` when its body or mentions change (`db/migrations/015_reactions.sql`),
+  which the chat shows as "(edited)".
+- **Reactions are records.** `reactions` (`config/reactions/data.ts`) holds one person's emoji under a message, an enum
+  of six names that the chat draws from explicit labels (`components/emoji.ts`). `.parent((r) => r.message_id, 'read')`
+  reads the message as the reactor would, its own conversation parents included, so only those who read a message
+  react to it or see its reactions; a unique `(message_id, user_id, emoji)` refuses the same reaction twice with a
+  `409`; the delete rule is `user_id = me`, and nobody updates one. Deleting a message deletes its reactions
+  (`on delete cascade`), which the live stream tells of too.
 - **A conversation has members.** A private channel and a direct message keep their members' user ids in `member_ids`,
   a JSON list with a GIN index. Their read rules are row filters, `roles.can('channels.read').and((ctx) =>
   where.or(where.eq('kind', 'public'), where.has('member_ids', ctx.user.id)))` on channels and `has(member_ids, me)` on
@@ -121,18 +142,21 @@ app on it with `protobase dev`.
   conversation, and the create form opens it instead of saying it could not save. Someone outside it gets the plain
   `409`, though the starter is always in the set, so they never repeat one they are not in
   ([opening an existing record](https://docs.protobase.net/reference/data-config/#opening-an-existing-record)).
-- **Live updates.** `.live()` on channels, direct messages and messages, with the jobs schema and change capture that
+- **Live updates.** `.live()` on channels, direct messages, messages and reactions, with the jobs schema and change capture that
   `protobase migration` wrote (`db/migrations/008_jobs.sql` and `009_changes.sql`), tells each open page which records
   changed, only of its own workspace and never their values; the chat follows the stream with `client.live` and reads
   the new messages through the API as its reader, so a private conversation's messages reach only its members ([live updates](https://docs.protobase.net/reference/live/)).
 - **The chat parts.** A channel's and a direct message's page are built from Protobase's
   [chat parts](https://docs.protobase.net/reference/custom-components/#chat-parts): `ChatThread`, which keeps the
   reader's place, goes to the end when they send (`followKey`) and offers earlier messages (`onLoadEarlier`);
-  `ChatMessage` with the author, avatar, time and `continued` for a run of one person's messages; `ChatDivider` with
+  `ChatMessage` with the author, avatar, time and `continued` for a run of one person's messages, and its `footer`
+  for "(edited)" and the reactions, drawn as `Button`s, with a bar of `Button`s over a message to react, edit and
+  delete, `MentionBox` to edit it with its mentions, and `Dialog` to confirm a delete; `ChatDivider` with
   `chatDayLabel` between messages that `sameChatDay` puts on different days; and `Composer`, whose `searchPeople` lists
   the members to mention and whose `onSend(text, mentionIds)` gives the ids each message keeps in `mentions`, which the
   unread counts and notifications read. `components/` holds the pages' own code: paging and following a conversation's
-  messages (`use-conversation-messages.ts`), grouping them (`thread-rows.ts`) and drawing them
+  messages, an edit read again and a delete taken out as the live stream tells of them (`use-conversation-messages.ts`),
+  their reactions (`use-message-reactions.ts`), grouping them (`thread-rows.ts`) and drawing them
   (`conversation-chat.tsx`), on a channel's page (`channel-chat.tsx`) and a direct message's
   (`direct-message-chat.tsx`), exported from `protobase.ui.tsx`.
 - **Names from the workspace's members.** A message stores its author and mentions as user ids;
@@ -161,7 +185,9 @@ app on it with `protobase dev`.
   positions and counts the messages after those by others with `client.aggregate('messages', { groupBy: 'channel_id' })`,
   once for the unread and once for those whose `mentions` hold them. The counts go through the messages API's own read
   rules, so a private conversation someone is not in never counts, and it counts again whenever the live stream tells
-  of a message or read position changed. A conversation's page reads its position on opening and draws
+  of a message or read position changed, so a deleted unread message drops out of the count. While it counts first, and
+  after a count fails, it answers no marks (`follow-unread.ts`), so the sidebar lists the conversations unmarked: a
+  marks hook that throws stops the whole sidebar. A conversation's page reads its position on opening and draws
   `ChatDivider tone="new"` above the first message after it by someone else, which `ChatThread` opens on; its
   `onReadToEnd` moves the position to the newest message once the reader is at the end while the page shows.
 - **Notifications from the server.** `notifications: {}` in `protobase.config.ts` turns on Protobase's
