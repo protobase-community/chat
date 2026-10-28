@@ -36,16 +36,22 @@ describe('the demo seed', () => {
     await expect(seedDemoWorkspace(auth, sql, new Date())).rejects.toThrow(/Create your own account first/)
   })
 
-  it('writes a workspace with #general and #random, three people and their conversation, once', async () => {
+  it('writes a workspace with #general and #random, three people, the developer and their conversation, once', async () => {
     const auth = await loadProjectAuth(root)
     await createUser(auth, { email: 'dev@example.com', role: 'admin' })
     const created = await seedDemoWorkspace(auth, sql, new Date())
     expect(created.map((person) => person.email)).toEqual(Object.values(people).map((person) => person.email))
     const first = await counts()
-    expect(first).toEqual({ users: 4, workspaces: 1, members: 3, channels: 2, messages: messages.length })
+    expect(first).toEqual({ users: 4, workspaces: 1, members: 4, channels: 2, messages: messages.length })
 
     expect(await seedDemoWorkspace(auth, sql, new Date())).toEqual([])
     expect(await counts()).toEqual(first)
+  })
+
+  it('makes the developer the workspace’s admin, so their own account sees the members', async () => {
+    const [row] = await sql`
+      select m.role from auth.member m join auth."user" u on u.id = m.user_id where u.email = 'dev@example.com'`
+    expect(row).toEqual({ role: 'admin' })
   })
 
   it('stores each mention as the id of the person named', async () => {

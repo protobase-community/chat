@@ -18,8 +18,10 @@ bun run dev                       # http://localhost:5173
 ```
 
 The seed prints the passwords of the three demo people (`maya@example.com`, `sam@example.com` and
-`lena@example.com`), once, when it creates them: sign in as two of them in two browsers to chat. It runs again
-without doubling anything, and needs your own account first, since the first account is always the superuser. Set your
+`lena@example.com`), once, when it creates them: sign in as two of them in two browsers to chat. Your own account
+joins the demo workspace as its admin, so you see the chat as a member too and can invite others from its Members page.
+It runs again without doubling anything, and needs your own account first, since the first account is always the
+superuser. Set your
 own `PROTOBASE_SECRET` in `.env` (`openssl rand -base64 32`). `bun run db:down` stops the database.
 
 Check a change with `bun run typecheck`, `bun run test`, `bun run build` and, after `bun run db:migrate`,
@@ -109,7 +111,7 @@ GitHub repository**. Protobase keeps the app in sync with the repository and dep
 `config/<name>/data.ts` and its screens in `config/<name>/ui.ts`, all exported from `config/index.ts`, and
 `protobase dev` and `protobase serve` serve the API and the app from them.
 
-- Tested with Protobase **0.53.8**, and CI runs against it. The app is bundled: the `@protobase/*` packages are dev
+- Tested with Protobase **0.54.1**, and CI runs against it. The app is bundled: the `@protobase/*` packages are dev
   dependencies in the caret range of that release, and dev, the build and the `db:*` scripts (`protobase run`) use the
   CLI's own copies, so a newer CLI within the range updates the app with no change to its files. `tsconfig.json`
   extends the `.protobase/tsconfig.json` that `protobase types` writes, so the editor types the CLI's copies too. To

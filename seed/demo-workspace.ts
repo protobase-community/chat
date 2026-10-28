@@ -6,7 +6,7 @@ import { channels, messages, owner, people, sentAt, workspace, type Person } fro
 /**
  * Writes the demo workspace, leaving what is there already as it is, so it runs again without doubling anything: a
  * person, the workspace, a membership or a channel that exists is kept, and a channel that has messages gets none.
- * Answers the passwords of the people it created, which nobody can read again later.
+ * The developer's own account, the store's first, joins it as its admin. Answers the passwords of the people it created, which nobody can read again later.
  */
 export const seedDemoWorkspace = async (auth: AdminAuth, sql: postgres.Sql, today: Date) => {
   // The store's first account is always a superuser: it is the developer's own, never a demo person's.
@@ -28,7 +28,14 @@ export const seedDemoWorkspace = async (auth: AdminAuth, sql: postgres.Sql, toda
     if (!members.has(person.email)) await addMember(auth, { organization: workspace.slug, email: person.email, appRoles: ['participant'] })
   }
 
-  const users = new Map((await listUsers(auth)).map((user) => [user.email, user.id]))
+  // The developer joins too, as the workspace's admin, so their own account sees the members' names and can invite.
+  const accounts = await listUsers(auth)
+  const developer = accounts.toSorted((a, b) => a.createdAt.localeCompare(b.createdAt))[0]!
+  if (!members.has(developer.email)) {
+    await addMember(auth, { organization: workspace.slug, email: developer.email, role: 'admin', appRoles: ['participant'] })
+  }
+
+  const users = new Map(accounts.map((user) => [user.email, user.id]))
   const userId = (person: Person) => users.get(people[person].email)!
 
   await sql.begin(async (tx) => {
