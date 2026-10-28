@@ -23,8 +23,10 @@ The seed prints the passwords of the three demo people (`maya@example.com`, `sam
 the private #launch and a direct message, which Lena and your own account do not see. Your own account
 joins the demo workspace as its admin and moderator, so you see the chat as a member too, can invite others from its
 Members page, and can delete anyone's messages.
-It runs again without doubling anything, and needs your own account first, since the first account is always the
-superuser. Set your
+It runs again without doubling anything, keeping what you wrote, and needs your own account first, since the first
+account is always the superuser. `bun run db:seed` resets the demo workspace instead, as the hosted demo does every
+hour: every message, thread, reaction, file, read position, channel and direct message in it goes, yours too, and the
+seed's come back as new. Other workspaces, the accounts and the workspace's members stay as they are. Set your
 own `PROTOBASE_SECRET` in `.env` (`openssl rand -base64 32`): it also signs the files' upload tickets and download
 links. Shared files are kept in `data/files/private`, which git ignores. `bun run db:down` stops the database.
 
@@ -270,6 +272,8 @@ app on it with `protobase dev`.
   `/direct_messages/<id>`, each created with the standard form, so links and breadcrumbs work as for any record.
 - **The demo seed** (`seed/`) creates its people and workspace with Protobase's host functions (`createUser`,
   `createOrganization`, `addMember`) and writes the channels, the direct message and the messages in one transaction.
+  The reset (`seed/reset-demo-workspace.ts`) deletes the workspace's rows in that same transaction first, and schedules
+  the deletion of its files' stored bytes, which a delete in SQL does not.
 - **No API around the rules.** `apiKeys: false` keeps the PostgREST-compatible API and its realtime off, even with keys
   in the environment: they run under the tables' grants and row-level security, which these tables do not have, rather
   than the resources' rules, so they would reach private conversations.
