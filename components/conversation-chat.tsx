@@ -4,6 +4,7 @@ import type { Conversation } from './conversation'
 import { ConversationComposer } from './conversation-composer'
 import { ConversationMessages } from './conversation-messages'
 import { useConversationMessages } from './use-conversation-messages'
+import { useMessageAttachments } from './use-message-attachments'
 import { useMessageReactions } from './use-message-reactions'
 import { useNewLine } from './use-new-line'
 import { useReadPosition } from './use-read-position'
@@ -15,13 +16,14 @@ type Props = { conversation: Conversation; topic?: string; empty: string; placeh
  * the window's height, as the chat parts do, so the composer stays in view while a reader goes back through it. It
  * shows its messages once the reader's read position is there too, so it opens on the "New messages" line above the
  * first one they have not read, and it moves their position to the newest message whenever they have read to the end.
- * Its messages carry their reactions, and the reader edits and deletes their own. Key it by the conversation, so
+ * Its messages carry their files and reactions, and the reader edits and deletes their own. Key it by the conversation, so
  * another one starts afresh.
  */
 export const ConversationChat = ({ conversation, topic, empty, placeholder }: Props) => {
   const chat = useConversationMessages(conversation)
   const messageIds = useMemo(() => chat.messages.map((message) => message.id), [chat.messages])
   const reactions = useMessageReactions(messageIds)
+  const attachments = useMessageAttachments(messageIds)
   const position = useReadPosition(conversation)
   const me = useSignedInUser()?.id
   const { member } = useMembers()
@@ -31,7 +33,7 @@ export const ConversationChat = ({ conversation, topic, empty, placeholder }: Pr
     const newest = chat.messages.at(-1)
     if (newest) position.readTo(newest.id)
   }
-  const error = chat.error ?? position.error ?? reactions.error
+  const error = chat.error ?? position.error ?? reactions.error ?? attachments.error
   return (
     <div className="flex h-[70vh] min-h-80 flex-col">
       {topic && <p className="pb-2 text-sm text-muted-foreground">{topic}</p>}
@@ -47,6 +49,7 @@ export const ConversationChat = ({ conversation, topic, empty, placeholder }: Pr
           <ConversationMessages
             messages={chat.messages}
             reactions={reactions.reactions}
+            attachments={attachments.attachments}
             me={me}
             member={member}
             newLineAbove={newLineAbove}

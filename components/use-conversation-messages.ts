@@ -10,8 +10,9 @@ export const pageSize = 50
 /**
  * A conversation's messages, oldest first: the latest page on opening, earlier pages on `loadEarlier`, and new ones as
  * the live stream tells of them, read through the messages API with the reader's own access; an edited message is read
- * again and a deleted one taken out as the stream tells of them too. `send` posts the reader's message, and `sent`
- * counts their sends, the thread's `followKey`; `edit` and `remove` change and delete one of theirs. Its reads belong to
+ * again and a deleted one taken out as the stream tells of them too. `send` posts the reader's message with its
+ * files in one write, and `sent` counts their sends, the thread's `followKey`; `edit` changes one of theirs and `remove`
+ * deletes it after its files. Its reads belong to
  * one conversation: the component that uses it is keyed by the conversation, so another one starts afresh.
  */
 export const useConversationMessages = ({ field, id }: Conversation) => {
@@ -99,9 +100,17 @@ export const useConversationMessages = ({ field, id }: Conversation) => {
   }, [messages, read, add])
 
   const send = useCallback(
-    (body: string, mentions: string[]) => {
+    (body: string | undefined, mentions: string[], files: string[]) => {
       setSent((count) => count + 1)
-      client.create('messages', { [field]: id, body, mentions }).then((created) => add([toMessage(created.record)]), setError)
+      client
+        .batchWrite([
+          { op: 'create', resource: 'messages', ref: 'message', data: { [field]: id, body, mentions } },
+          ...files.map((file) => ({ op: 'create' as const, resource: 'attachments', data: { message_id: { $ref: 'message' }, file } })),
+        ])
+        .then(({ results }) => {
+          const created = results[0]
+          if (created?.op === 'create') add([toMessage(created.record)])
+        }, setError)
     },
     [client, field, id, add],
   )
@@ -112,8 +121,15 @@ export const useConversationMessages = ({ field, id }: Conversation) => {
     [client],
   )
 
+  // Its files first, in the same write: the database keeps a message's files from outliving it.
   const remove = useCallback(
-    (messageId: number) => client.remove('messages', messageId, { etag: '*' }).then(() => drop(new Set([messageId])), setError),
+    (messageId: number, attachmentIds: number[]) =>
+      client
+        .batchWrite([
+          ...attachmentIds.map((key) => ({ op: 'delete' as const, resource: 'attachments', key })),
+          { op: 'delete', resource: 'messages', key: messageId },
+        ])
+        .then(() => drop(new Set([messageId])), setError),
     [client, drop],
   )
 

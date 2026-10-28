@@ -2,7 +2,8 @@
 export type Message = {
   id: number
   author_id: string
-  body: string
+  /** Null for a message of files alone. */
+  body: string | null
   /** The user ids of the people it mentions. */
   mentions: string[]
   sent_at: string
@@ -14,7 +15,7 @@ export type Message = {
 export const toMessage = (record: Record<string, unknown>): Message => ({
   id: Number(record.id),
   author_id: String(record.author_id),
-  body: String(record.body),
+  body: record.body == null ? null : String(record.body),
   mentions: Array.isArray(record.mentions) ? record.mentions.map(String) : [],
   sent_at: String(record.sent_at),
   edited_at: record.edited_at == null ? null : String(record.edited_at),
