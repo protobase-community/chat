@@ -21,8 +21,7 @@ type Props = { conversation: Conversation; header: ReactNode; empty: string; pla
  * too, so it opens on the "New messages" line above the first one they have not read, and it moves their position to the
  * newest message whenever they have read to the end. Its messages carry their files, reactions and replies' count, and
  * the reader edits their own and deletes those they may. Above the composer, and the thread's, shows who else types
- * there. It listens to a `SharedLive` around it. Key it by the
- * conversation, so another one starts afresh.
+ * there. Key it by the conversation, so another one starts afresh.
  */
 export const ConversationChat = ({ conversation, header, empty, placeholder }: Props) => {
   const chat = useConversationMessages(conversation)

@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useClient } from '@protobase/ui'
 import { changesOf } from './live-changes'
-import { useSharedLive } from './shared-live'
 
 /** How many messages one read covers, so its filter stays short. */
 const messagesPerRead = 50
@@ -11,7 +10,7 @@ const recordsPerPage = 500
 /**
  * The records of `resource` under the messages `messageIds` names, the thread's loaded ones, such as their reactions:
  * each message's read once it shows, read through the API with the reader's own access. With `follow`, also those added
- * or deleted later as the shared live stream tells of them; records written only together with their message do
+ * or deleted later as the live stream tells of them; records written only together with their message do
  * without. `add` and `drop` take in what the reader wrote.
  */
 export const useMessageRecords = <T extends { id: number; message_id: number }>(
@@ -21,7 +20,6 @@ export const useMessageRecords = <T extends { id: number; message_id: number }>(
   { follow }: { follow: boolean },
 ) => {
   const client = useClient()
-  const listen = useSharedLive()
   const [records, setRecords] = useState<ReadonlyMap<number, T>>(new Map())
   const [error, setError] = useState<unknown>()
   // The messages whose records were read or are on their way, and those the thread shows, for the live stream's news.
@@ -67,7 +65,7 @@ export const useMessageRecords = <T extends { id: number; message_id: number }>(
 
   useEffect(() => {
     if (!follow) return
-    return listen({
+    return client.live({
       onChanges: (changes) => {
         const { created, deleted } = changesOf(changes, resource)
         if (deleted.size > 0) drop(deleted)
@@ -81,7 +79,7 @@ export const useMessageRecords = <T extends { id: number; message_id: number }>(
         readOf([...shown.current])
       },
     })
-  }, [listen, follow, resource, readAll, readOf, drop])
+  }, [client, follow, resource, readAll, readOf, drop])
 
   return { records: [...records.values()], add, drop, error, setError }
 }

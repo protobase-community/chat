@@ -4,14 +4,13 @@ import { chatFilter } from './chat-filter'
 import type { Conversation } from './conversation'
 import { changesOf } from './live-changes'
 import { dropMessages, mergeMessages, replaceMessages, toMessage, type Message } from './message'
-import { useSharedLive } from './shared-live'
 
 /** How many messages a page of the chat brings: the latest on opening, and each "Load earlier". */
 export const pageSize = 50
 
 /**
  * A conversation's messages outside threads, oldest first, or with `threadId` that thread's replies: the latest page on
- * opening, earlier pages on `loadEarlier`, and new ones as the shared live stream tells of them, read through the
+ * opening, earlier pages on `loadEarlier`, and new ones as the live stream tells of them, read through the
  * messages API with the reader's own access; an edited message is read again, such as a thread's first message whose
  * replies changed, and a deleted one taken out as the stream tells of them too. `send` posts the reader's message, a
  * reply in the thread with `threadId`, with its files in one write, and `sent` counts their sends, the thread's
@@ -21,7 +20,6 @@ export const pageSize = 50
 export const useConversationMessages = (conversation: Conversation, threadId?: number) => {
   const { field, id } = conversation
   const client = useClient()
-  const listen = useSharedLive()
   const shown = chatFilter(conversation, threadId)
   const [messages, setMessages] = useState<Message[]>([])
   const [hasEarlier, setHasEarlier] = useState(false)
@@ -82,7 +80,7 @@ export const useConversationMessages = (conversation: Conversation, threadId?: n
 
   useEffect(() => {
     void readLatest()
-    return listen({
+    return client.live({
       onChanges: (changes) => {
         const { created, updated, deleted } = changesOf(changes, 'messages')
         if (deleted.size > 0) drop(deleted)
@@ -91,7 +89,7 @@ export const useConversationMessages = (conversation: Conversation, threadId?: n
       },
       onResync: () => void readLatest(),
     })
-  }, [listen, readLatest, readNewer, readEdited, drop])
+  }, [client, readLatest, readNewer, readEdited, drop])
 
   const loadEarlier = useCallback(() => {
     const first = messages[0]

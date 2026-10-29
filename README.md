@@ -214,8 +214,8 @@ app on it with `protobase dev`.
   changed, only of its own workspace and never their values; the chat follows the stream with `client.live` and reads
   the new messages through the API as its reader, so a private conversation's messages reach only its members ([live updates](https://docs.protobase.net/reference/live/)).
   Every `client.live` of the UI's client, `useClient()`, shares one stream, so a page holds one of the browser's few
-  connections to the app for all of them; a conversation's page hands its stream to its messages, its open thread's
-  replies and their reactions through `SharedLive` (`components/shared-live.tsx`), and attachments, written and deleted only with their message, are not live: the chat reads a message's
+  connections to the app for all of them, such as a conversation's messages, its open thread's replies and their
+  reactions. Attachments, written and deleted only with their message, are not live: the chat reads a message's
   files when the message shows (`use-message-attachments.ts`).
 - **Who is online or away.** Every record has a [channel](https://docs.protobase.net/reference/channels/), which
   whoever may read the record joins with `client.channel(resource, key)`: presence and short-lived broadcasts, never
