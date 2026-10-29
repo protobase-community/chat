@@ -78,7 +78,7 @@ app on it with `protobase dev`.
 | Files in messages, with or without text, picked with 📎, pasted, such as a screenshot, or dropped on the message box: images shown as previews, any other file as its name and size to download, at most 10 of up to 20 MB each | This version |
 | Replying in a thread, in a panel beside the conversation, with mentions and files: the conversation shows under a message its number of replies and when the last came, both live | This version |
 | Workspace moderators, its owners and the admins they pick, who delete anyone's message in a conversation they read, never edit it | This version |
-| Who is online or away beside their name, in a direct message's header, the sidebar's direct messages and the Members page: online while a page of theirs shows and was used in the last 10 minutes, several tabs counting as one | This version |
+| Who is online or away beside their name, in a direct message's header, the sidebar's direct messages and the Members page, which a workspace's owners and admins open: online while a page of theirs shows and was used in the last 10 minutes, several tabs counting as one | This version |
 | "Set a status" in the profile menu: busy, do not disturb or a text such as "Having lunch", with when it clears, shown beside the name whether or not the person has a page open | This version |
 | Do not disturb holds a person's push notifications, keeping them in the bell | This version |
 | "Name is typing…" above the composer, and the thread's, while others write there | This version |
