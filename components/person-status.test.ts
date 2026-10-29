@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { directMessageLabel, personLabel } from './person-status'
+import { groupLabel, personLabel } from './person-status'
 
 const lunch = { availability: 'busy' as const, text: 'Having lunch', clearsAt: '2026-10-29T12:00:00Z' }
 const noon = Date.parse('2026-10-29T12:00:00Z')
@@ -20,17 +20,17 @@ describe('personLabel', () => {
   })
 })
 
-describe('directMessageLabel', () => {
-  it('describes the one other person without their name, which the row shows', () => {
-    expect(directMessageLabel([{ name: 'Sam Okafor', activity: 'online', status: undefined }], noon)).toBe('Online')
-  })
-
+describe('groupLabel', () => {
   it('names each of several people with what is known of them', () => {
     const others = [
       { name: 'Sam Okafor', activity: 'online' as const, status: undefined },
       { name: 'Lena Novak', activity: undefined, status: undefined },
       { name: 'Maya Jansen', activity: 'away' as const, status: { availability: 'automatic' as const, text: 'On vacation', clearsAt: null } },
     ]
-    expect(directMessageLabel(others, noon)).toBe('Sam Okafor: Online; Maya Jansen: Away, On vacation')
+    expect(groupLabel(others, noon)).toBe('Sam Okafor: Online; Maya Jansen: Away, On vacation')
+  })
+
+  it('says nothing when nobody has an activity or a status', () => {
+    expect(groupLabel([{ name: 'Lena Novak', activity: undefined, status: undefined }], noon)).toBeUndefined()
   })
 })

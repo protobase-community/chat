@@ -78,16 +78,14 @@ app on it with `protobase dev`.
 | Files in messages, with or without text, picked with 📎, pasted, such as a screenshot, or dropped on the message box: images shown as previews, any other file as its name and size to download, at most 10 of up to 20 MB each | This version |
 | Replying in a thread, in a panel beside the conversation, with mentions and files: the conversation shows under a message its number of replies and when the last came, both live | This version |
 | Workspace moderators, its owners and the admins they pick, who delete anyone's message in a conversation they read, never edit it | This version |
-| Who is online or away beside their name, in a direct message's header and on hover in the sidebar's direct messages: online while a page of theirs shows and was used in the last 10 minutes, several tabs counting as one | This version |
+| Who is online or away beside their name, in a direct message's header, the sidebar's direct messages and the Members page: online while a page of theirs shows and was used in the last 10 minutes, several tabs counting as one | This version |
 | "Set a status" in the profile menu: busy, do not disturb or a text such as "Having lunch", with when it clears, shown beside the name whether or not the person has a page open | This version |
 | Do not disturb holds a person's push notifications, keeping them in the bell | This version |
 | "Name is typing…" above the composer, and the thread's, while others write there | This version |
 | Message search | Later |
 | Voice and video calls | Later, once Protobase has calling |
 
-<gap>The sidebar's direct messages cannot show the online, away or status mark beside a name because a mark with an element of the app's own in Protobase's sidebar is not implemented.</gap> Their tooltip says it, such as "Online, Busy, Having lunch", and so does the conversation's header.
-
-<gap>The workspace's Members page cannot show who is online or away because a presence slot on Protobase's Members page is not implemented.</gap> It shows each member's set status.
+<gap>A group direct message's row in the sidebar cannot show its people's dots and status marks because a sidebar mark naming more than one person is not implemented.</gap> Its tooltip says them, such as "Sam Okafor: Online; Lena Fischer: Away, On vacation", and so does the conversation's header.
 
 <gap>The sidebar cannot mark more than a person's first 100 channels and 100 direct messages because unread counts over more conversations are not implemented.</gap>
 
@@ -228,10 +226,13 @@ app on it with `protobase dev`.
   or scrolled in within `idleAfterMs`, 10 minutes (`presence.ts`), and `away` once it hides or idles that long
   (`follow-activity.ts`). The channel takes 5 presence updates in 30 seconds, so it tracks the latest at most once in 7
   seconds. Each page is one entry, and a person is online when any of theirs is (`peopleActivity`); closing the page
-  leaves at once, and a page whose network went away leaves within 12 seconds. The dot (`presence-dot.tsx`) is passed
-  to Protobase's `StatusMark` as its `presence`, beside each name in a direct message's header
-  (`direct-message-people.tsx`), and the sidebar's direct messages say it in their tooltip through the
-  `directMessages` marks hook (`use-direct-message-marks.ts`), since the sidebar draws no element of the app's own.
+  leaves at once, and a page whose network went away leaves within 12 seconds. `useWorkspacePresence`
+  (`use-workspace-presence.ts`) is the app's `presence` in `protobase.ui.tsx`: Protobase calls it once a page and
+  draws its own online or away dot from it, beside each member's status on the Members page. In the sidebar, the
+  `directMessages` marks hook (`use-direct-message-marks.ts`) names a one-to-one direct message's other person, so
+  the row shows their dot, busy or do not disturb mark and, on hover, status text; a group's row says its people's in
+  its tooltip. A direct message's header reads it with `usePresence()` and passes it to `StatusMark`
+  (`direct-message-people.tsx`).
 - **Setting a status.** `status: {}` in `protobase.config.ts` turns on Protobase's
   [status](https://docs.protobase.net/reference/status/), with the table `protobase migration` wrote
   (`db/migrations/021_status.sql`): "Set a status" in the profile menu, busy, do not disturb or a text, with when it
@@ -344,8 +345,8 @@ GitHub repository**. Protobase keeps the app in sync with the repository and dep
 `config/<name>/data.ts` and its screens in `config/<name>/ui.ts`, all exported from `config/index.ts`, and
 `protobase dev` and `protobase serve` serve the API and the app from them.
 
-- Tested with Protobase **0.59.3**, and CI runs against it. The app is bundled: the `@protobase/*` packages are dev
-  dependencies in the caret range of that release, and dev, the build and the `db:*` scripts (`protobase run`) use the
+- Tested with Protobase **0.61.0**, and CI runs against it. The app is bundled: the `@protobase/*` packages are dev
+  dependencies in the tilde range of that release, and dev, the build and the `db:*` scripts (`protobase run`) use the
   CLI's own copies, so a newer CLI within the range updates the app with no change to its files. `tsconfig.json`
   extends the `.protobase/tsconfig.json` that `protobase types` writes, so the editor types the CLI's copies too. To
   move outside the range, set the new range on each `@protobase/*` package, run `bun install`, then
