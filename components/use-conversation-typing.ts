@@ -23,22 +23,12 @@ export const useConversationTyping = (conversation: Conversation) => {
   const [typers, setTypers] = useState<Typers>(new Map())
 
   useEffect(() => {
-    // Joins after this task: development mounts every effect twice at once, and the client cannot yet let go of a
-    // channel whose join the server has not answered, so a join of the first, discarded mount would leave the second
-    // refused as already joined.
-    let left = false
-    let joined: Channel | undefined
-    let stop: (() => void) | undefined
-    queueMicrotask(() => {
-      if (left) return
-      joined = client.channel(resources[conversation.field], conversation.id)
-      setChannel(joined)
-      stop = joined.on('typing', ({ user, payload }) => setTypers((now) => heard(now, user, payload, Date.now())))
-    })
+    const joined = client.channel(resources[conversation.field], conversation.id)
+    setChannel(joined)
+    const stop = joined.on('typing', ({ user, payload }) => setTypers((now) => heard(now, user, payload, Date.now())))
     return () => {
-      left = true
-      stop?.()
-      joined?.leave()
+      stop()
+      joined.leave()
       setChannel(undefined)
       setTypers(new Map())
     }
