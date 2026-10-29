@@ -16,4 +16,7 @@ export default defineConfig({
   apiKeys: false,
   // The bell and browser push: config/messages/notify.ts tells people of the messages that mention them or write to them.
   notifications: {},
+  // "Set a status" in the user menu: busy, do not disturb or a text such as "Having lunch", which the workspace sees beside
+  // the person's name; do not disturb holds their push notifications, keeping them in the bell.
+  status: {},
 })

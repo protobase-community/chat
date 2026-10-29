@@ -116,3 +116,17 @@ describe('a direct message', () => {
     expect(await told('dan', body, 'And you, @Dan Mwangi?')).toBe(false)
   })
 })
+
+describe('do not disturb', () => {
+  it('keeps a mention in the history the bell lists', async () => {
+    const quiet = await fetch(`${chat.url}/api/status`, {
+      method: 'PUT',
+      headers: { ...people.ana, 'content-type': 'application/json' },
+      body: JSON.stringify({ availability: 'do_not_disturb', text: null, clearsAt: null }),
+    })
+    expect(quiet.status).toBe(200)
+    const body = 'Are you around, @Ana Silva?'
+    await say('ben', { channel_id: general.id }, body, [ids.ana])
+    expect(await arrived('ana', body)).toMatchObject({ title: 'Ben Adeyemi mentioned you in #general' })
+  })
+})
