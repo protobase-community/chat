@@ -1,6 +1,7 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { ChatThread, useMembers, useSignedInUser } from '@protobase/ui'
 import type { Conversation } from './conversation'
+import { ConversationCall } from './conversation-call'
 import { ConversationComposer } from './conversation-composer'
 import { ConversationMessages } from './conversation-messages'
 import { ThreadPanel } from './thread-panel'
@@ -21,7 +22,9 @@ type Props = { conversation: Conversation; header: ReactNode; empty: string; pla
  * too, so it opens on the "New messages" line above the first one they have not read, and it moves their position to the
  * newest message whenever they have read to the end. Its messages carry their files, reactions and replies' count, and
  * the reader edits their own and deletes those they may. Above the composer, and the thread's, shows who else types
- * there. Key it by the conversation, so another one starts afresh.
+ * there. While the page joins the conversation's call, the call shows beside the messages, above them on a phone, so
+ * what people write during it is the conversation's own messages. Key it by the conversation, so another one starts
+ * afresh.
  */
 export const ConversationChat = ({ conversation, header, empty, placeholder }: Props) => {
   const chat = useConversationMessages(conversation)
@@ -42,8 +45,9 @@ export const ConversationChat = ({ conversation, header, empty, placeholder }: P
   }
   const error = chat.error ?? position.error ?? reactions.error ?? attachments.error
   return (
-    <div className="flex min-h-0">
-      <div className="flex min-w-0 flex-1 flex-col">
+    <div className="flex min-h-0 flex-col md:flex-row">
+      <ConversationCall className="h-1/2 shrink-0 border-b border-border md:h-auto md:w-3/5 md:border-r md:border-b-0" />
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         {header}
         <ChatThread
           length={ready ? chat.messages.length : 0}
