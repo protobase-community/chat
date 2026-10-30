@@ -2,9 +2,10 @@
 
 A team chat app built on Protobase: a team signs in to its workspace, talks in channels, private channels and direct
 messages, and sees each other's messages arrive live, with @mentions, threads, shared files and images, and notifications of them,
-who is online, away or busy, and who is typing. Start from it for a chat of your own, or read it to see how Protobase builds one:
-everything below is Protobase's own features, with one piece of server code of the app's own, the subscription that
-notifies people of messages.
+who is online, away or busy, and who is typing, and calls each other with voice, video and screen sharing, peer to peer.
+Start from it for a chat of your own, or read it to see how Protobase builds one: everything below is Protobase's own
+features, with two pieces of server code of the app's own, the subscription that notifies people of messages and the
+function that lets people into a conversation's call.
 
 ## Run it locally
 
@@ -34,6 +35,8 @@ links. Shared files are kept in `data/files/private`, which git ignores. `bun ru
 Mention Sam as Maya, or write to Maya as Sam, and the other sees it in the bell in the top bar within a few seconds. In
 #general, Sam's release notes have a thread: open it from **2 replies** under the message, reply in it as one of them,
 and the other sees the count go up and, with the thread open, the reply arrive.
+Press **Start call** in #general's header as one of them, then **Join** in the other's: what they write meanwhile goes
+into #general beside the call. A call in the direct message rings the other person on whatever page they have open.
 For push to the browser too, generate the Web Push keys and put them in `.env`, with an address push services can reach
 you at, then start `bun run dev` again and press **Turn on** in the bell:
 
@@ -83,7 +86,10 @@ app on it with `protobase dev`.
 | Do not disturb holds a person's push notifications, keeping them in the bell | This version |
 | "Name is typing…" above the composer, and the thread's, while others write there | This version |
 | Message search | Later |
-| Voice and video calls | Later, once Protobase has calling |
+| Voice and video calls in a channel or direct message, with screen sharing, peer to peer between the browsers, for a small group: **Start call** in its header, or "Call in progress · 3 · Join" while one goes on, live | This version |
+| The call beside the conversation's messages, above them on a phone, so what people write during a call is the conversation's own messages | This version |
+| A direct message's call rings its other people on any page of the chat, with Accept and Decline, and a missed call stays in the bell; someone on do not disturb is not rung, and finds the call in their bell | This version |
+| Guest links to a call, for a job interview: the guest gives their name, checks their microphone and camera, and waits until someone in the call lets them in, then sees only the call | This version |
 
 <gap>A group direct message's row in the sidebar cannot show its people's dots and status marks because a sidebar mark naming more than one person is not implemented.</gap> Its tooltip says them, such as "Sam Okafor: Online; Lena Fischer: Away, On vacation", and so does the conversation's header.
 
@@ -317,6 +323,27 @@ app on it with `protobase dev`.
   `sendNotification(db, { userIds, inbox: true }, ...)`, a background job, a notification that names the sender, the
   channel or a direct message, whether in a thread, and the message's start, and links to the conversation's record page on `PROTOBASE_URL`
   (`notification.ts`). The demo seed turns change capture off while it writes, so its past messages notify nobody.
+- **Calls on conversations.** `calls: { backend: { kind: 'peer' } }` in `protobase.config.ts` turns on Protobase's
+  [calls](https://docs.protobase.net/reference/calls/) through its peer-to-peer media plugin, with no media server, and
+  the `calls` schema `protobase migration` wrote (`db/migrations/023_calls.sql`). A call belongs to a channel or a
+  direct message, and `functions/call.ts`, at the address `config/conversations/call-address.ts` makes, lets its
+  caller in with `calls.join`: Protobase reads the conversation as the caller, so someone who cannot read it, such as
+  someone outside a private channel, is refused with the `404` of a conversation that does not exist, and someone
+  who no longer can is out of the call within a minute. The function joins each person by their account's name, which
+  guests see them by, lets them send their microphone, camera and screen, and lets them share guest links. A direct
+  message's call rings its other people (`ring`) when that join starts it; a channel's rings no one. The header shows
+  Protobase's `CallMark` (`conversation-header.tsx`), which follows the conversation's calls over the channels'
+  socket the page already holds, so it opens no connection of its own, and the page shows Protobase's `RecordCall`
+  beside the messages while its address joins the call (`?call=join`, `conversation-call.tsx`). Ringing, its bell
+  entries, do not disturb, the guest links and their lobby page (`/-/call-guest`) are all Protobase's; a workspace's
+  owner or admin turns guest links off for it on the organization page ("Guest links to calls"), which revokes every
+  live one. A peer-to-peer call holds 8 people at most, since each browser sends its media to every other: it is made
+  for interviews and small team meetings, not a company all-hands. Calls are tested in Chromium and Firefox only.
+  Everyone in a call, guests too, can see each other's network addresses, as their browsers connect to each other.
+  The chat sets no STUN or TURN server, so calls connect between browsers on one network only: for calls across
+  ordinary home routers, add a STUN server to `iceServers` in `calls.backend` of `protobase.config.ts`, and behind a
+  strict company firewall that lets no UDP through, a TURN server of your own, with short-lived credentials, since
+  every member's browser receives them.
 - **Records at their own address.** A channel is an ordinary record at `/channels/<id>` and a direct message at
   `/direct_messages/<id>`, each created with the standard form, so links and breadcrumbs work as for any record.
 - **The demo seed** (`seed/`) creates its people and workspace with Protobase's host functions (`createUser`,
