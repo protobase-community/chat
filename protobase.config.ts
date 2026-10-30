@@ -19,4 +19,7 @@ export default defineConfig({
   // "Set a status" in the user menu: busy, do not disturb or a text such as "Having lunch", which the workspace sees beside
   // the person's name; do not disturb holds their push notifications, keeping them in the bell.
   status: {},
+  // Voice and video calls in channels and direct messages, joined through functions/call.ts, straight between the
+  // browsers: no media server. Without a STUN server in `iceServers`, only browsers on the same network connect.
+  calls: { backend: { kind: 'peer' } },
 })
