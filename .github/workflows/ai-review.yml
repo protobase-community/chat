@@ -20,8 +20,9 @@ on:
         type: number
 
 # Merging a pull request takes contents: write: https://docs.github.com/en/rest/authentication/permissions-required-for-github-apps#repository-permissions-for-contents
+# Starting dispatch-after-merge takes actions: write.
 permissions:
-  actions: read
+  actions: write
   checks: read
   contents: write
   pull-requests: write
@@ -33,6 +34,8 @@ jobs:
     with:
       # Only the template itself; an app created from it reviews without merging on its own.
       auto-merge: ${{ github.repository_owner == 'protobase-community' }}
+      # A merge with GITHUB_TOKEN starts no workflow on the default branch, so the review starts this one itself.
+      dispatch-after-merge: ci.yml
       # A dispatched run's inputs arrive as text; the shared workflow's pr-number is a number.
       pr-number: ${{ fromJSON(inputs.pr-number || '0') }}
     secrets:
