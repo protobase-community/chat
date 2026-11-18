@@ -1,6 +1,7 @@
 import { randomBytes } from 'node:crypto'
 import type postgres from 'postgres'
-import { addMember, createOrganization, createUser, hasUsers, listOrganizations, listUsers, type AdminAuth } from '@protobase/server'
+import { addMember, createOrganization, createUser, hasUsers, type AdminAuth } from '@protobase/server'
+import { allOrganizations, allUsers } from './all-pages'
 import { channels, directMessages, messages, owner, people, sentAt, workspace, type DemoChannel, type DemoMessage, type Person } from './demo-data'
 
 /**
@@ -15,7 +16,7 @@ export const seedDemoWorkspace = async (auth: AdminAuth, sql: postgres.Sql, toda
   if (!(await hasUsers(auth))) throw new Error('Create your own account first: bun run protobase users create you@example.com --role admin --generate-password')
 
   const created: { email: string; password: string }[] = []
-  const known = new Set((await listUsers(auth)).map((user) => user.email))
+  const known = new Set((await allUsers(auth)).map((user) => user.email))
   for (const person of Object.values(people)) {
     if (known.has(person.email)) continue
     const password = randomBytes(12).toString('base64url')
@@ -23,7 +24,7 @@ export const seedDemoWorkspace = async (auth: AdminAuth, sql: postgres.Sql, toda
     created.push({ email: person.email, password })
   }
 
-  const existing = (await listOrganizations(auth)).find((organization) => organization.slug === workspace.slug)
+  const existing = (await allOrganizations(auth)).find((organization) => organization.slug === workspace.slug)
   const organization = existing ?? (await createOrganization(auth, { ...workspace, owner: people[owner].email })).organization
   const members = new Set(existing?.members.map((member) => member.email) ?? [people[owner].email])
   for (const person of Object.values(people)) {
@@ -32,8 +33,8 @@ export const seedDemoWorkspace = async (auth: AdminAuth, sql: postgres.Sql, toda
 
   // The developer joins too, as the workspace's admin and moderator, so their own account sees the members' names, can
   // invite, and deletes anyone's messages.
-  const accounts = await listUsers(auth)
-  const developer = accounts.toSorted((a, b) => a.createdAt.localeCompare(b.createdAt))[0]!
+  const accounts = await allUsers(auth)
+  const developer = accounts[0]!
   if (!members.has(developer.email)) {
     await addMember(auth, { organization: workspace.slug, email: developer.email, role: 'admin', appRoles: ['moderator'] })
   }

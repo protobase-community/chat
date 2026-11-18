@@ -11,7 +11,8 @@ describe('a conversation record page', () => {
     ['channels', channelsView.toModel(channels.toModel()).record],
     ['direct messages', directMessagesView.toModel(directMessages.toModel()).record],
   ])('of %s are a component protobase.ui.tsx exports', (_, record) => {
-    expect(record).toBeDefined()
-    expect(ui).toHaveProperty(record!.component)
+    const component = record && 'component' in record ? record.component : undefined
+    expect(component).toBeDefined()
+    expect(ui).toHaveProperty(component!)
   })
 })
