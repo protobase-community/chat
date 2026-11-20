@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest'
+import { showTextsIn } from '@protobase/ui'
+import { beforeAll, describe, expect, it } from 'vitest'
 import { lastReplyLabel, replyCountLabel } from './reply-labels'
 
 describe('replyCountLabel', () => {
@@ -9,6 +10,9 @@ describe('replyCountLabel', () => {
 })
 
 describe('lastReplyLabel', () => {
+  // Outside the app, the day names need the language's texts loaded first
+  beforeAll(() => showTextsIn('en'))
+
   it('names the day of the last reply and its time there', () => {
     const now = Date.parse('2026-10-28T15:00:00Z')
     expect(lastReplyLabel('2026-10-28T09:42:00Z', now, 'UTC')).toMatch(/^Last reply Today, 0?9:42/)
