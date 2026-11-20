@@ -32,7 +32,7 @@ beforeAll(async () => {
   const workspaces = await makeWorkspaces(database.databaseUrl, chat.url)
   people = { ana: await workspaces.as(ana), ben: await workspaces.as(ben), dan: await workspaces.as(dan), eve: await workspaces.as(eve) }
   ids = workspaces.ids
-  general = await start('ana', '/channels', { name: 'general' })
+  general = { id: workspaces.general.northwind }
   backroom = await start('ben', '/channels', { name: 'backroom', kind: 'private', member_ids: [ids.dan] })
 }, 180_000)
 

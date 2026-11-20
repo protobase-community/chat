@@ -63,6 +63,7 @@ app on it with `protobase dev`.
 | --- | --- |
 | Workspaces, joined by invitation, each seeing only its own channels | This version |
 | Channels with a name and a topic, open to the whole workspace | This version |
+| A new workspace starts with a #general channel, its creator's | This version |
 | A conversation filling the page beside the sidebar: its messages scroll, the composer stays at the bottom, and a Details link opens its members, Edit and Delete | This version |
 | Messages with the author's name, avatar and time, one person's run of messages grouped | This version |
 | Day dividers: "Today", "Yesterday", the date | This version |
@@ -129,6 +130,8 @@ app on it with `protobase dev`.
 
 <gap>Someone who has the conversation open still gets a notification of its new messages because telling whether it is in front of them is not implemented.</gap>
 
+<gap>Someone signed in without a workspace cannot name one in a single step and land in its #general because Protobase's first-run step for organizations is not implemented.</gap> They see the Organizations page, which asks for a name and a slug, and open #general from the sidebar once it is made.
+
 ## How Protobase builds it
 
 - **Workspaces are organizations.** `auth.organizations` in `protobase.config.ts` turns on Protobase's
@@ -137,6 +140,9 @@ app on it with `protobase dev`.
   an invited person the **Participant** role, which `config/roles.ts` lets read and start channels and direct messages
   and post in them, or the **Moderator** role, which does all that and deletes anyone's messages there.
   `create: 'everyone'` lets anyone signed in start a workspace of their own.
+- **A new workspace starts with #general.** `onOrganizationCreated` in `auth/hooks.ts`, Protobase's
+  [auth hooks](https://docs.protobase.net/reference/auth/), adds a public #general, its creator's, when a workspace is
+  created, by any route. A workspace made before it keeps the channels it has.
 - **Each workspace sees only its own.** Channels, direct messages and messages declare `.tenant((r) => r.organization_id)`
   ([data config](https://docs.protobase.net/reference/data-config/#resource)): every read is limited to the workspace
   the session works in, and every create is stamped with it; no request may set it.

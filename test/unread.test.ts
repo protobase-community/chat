@@ -13,6 +13,7 @@ let chat: Awaited<ReturnType<typeof startChat>>
 let database: Awaited<ReturnType<typeof throwawayDatabase>>
 let people: Record<Who, Headers>
 let ids: Record<'ana' | 'ben' | 'dan', string>
+let generalId: number
 
 const api = (path: string, headers: Headers, init: RequestInit = {}) =>
   fetch(`${chat.url}/api/v1${path}`, { ...init, headers: { ...headers, 'content-type': 'application/json' } })
@@ -38,6 +39,7 @@ beforeAll(async () => {
   const workspaces = await makeWorkspaces(database.databaseUrl, chat.url)
   people = { ana: await workspaces.as(ana), ben: await workspaces.as(ben), dan: await workspaces.as(dan), superuser: await workspaces.as(superuser) }
   ids = workspaces.ids
+  generalId = workspaces.general.northwind
 }, 180_000)
 
 afterAll(async () => {
@@ -50,7 +52,7 @@ describe('a read position', () => {
   let position: { id: number; user_id: string }
 
   beforeAll(async () => {
-    general = await created(await send('POST', '/channels', people.ana, { name: 'general' }))
+    general = { id: generalId }
     position = await created(await send('POST', '/read_positions', people.ana, { channel_id: general.id, last_read_id: 5 }))
   })
 

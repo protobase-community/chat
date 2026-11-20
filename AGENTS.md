@@ -13,7 +13,8 @@ team chat's channels and messages.
 
 ## Never touch
 
-- `auth/` and the `auth` schema: sign-in and accounts.
+- Sign-in, accounts and the `auth` schema. `auth/hooks.ts` holds only the app's hooks on sign-in's events, which write
+  the app's own tables, such as the #general a new workspace starts with.
 - `.github/workflows/`.
 
 ## Scripts

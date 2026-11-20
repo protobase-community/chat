@@ -1,10 +1,12 @@
 import { randomBytes } from 'node:crypto'
 import { loadProjectAuth } from '@protobase/cli/auth'
 import { addMember, createOrganization, createUser } from '@protobase/server'
+import postgres from 'postgres'
 import { root } from './chat-server'
 
 // Two workspaces over the test's database: Ana, Ben and Dan in Northwind, Cara alone in Southwind, each a participant,
-// Eve, Northwind's admin with the Moderator role, and the superuser, a member of Northwind.
+// Eve, Northwind's admin with the Moderator role, and the superuser, a member of Northwind. Each workspace starts with
+// the #general its creation adds.
 
 const person = (email: string, name: string) => ({ email, name, password: randomBytes(12).toString('base64url') })
 export const ana = person('ana@example.com', 'Ana Silva')
@@ -36,6 +38,13 @@ export const makeWorkspaces = async (databaseUrl: string, appUrl: string) => {
   await addMember(auth, { organization: 'northwind', email: superuser.email })
   await createOrganization(auth, { name: 'Southwind', slug: 'southwind', owner: cara.email })
 
+  // Each workspace's #general, by its slug.
+  const sql = postgres(databaseUrl, { max: 1, onnotice: () => {} })
+  const rows = await sql<{ slug: string; id: number }[]>`
+    select o.slug, c.id from public.channels c join auth.organization o on o.id = c.organization_id where c.name = 'general'`
+  await sql.end()
+  const general = { northwind: rows.find((row) => row.slug === 'northwind')!.id, southwind: rows.find((row) => row.slug === 'southwind')!.id }
+
   /** Signs `who` in with their password, as the sign-in page does, and answers the headers of their API requests. */
   const as = async (who: typeof ana) => {
     const signIn = await fetch(`${appUrl}/api/auth/sign-in/email`, {
@@ -50,5 +59,5 @@ export const makeWorkspaces = async (databaseUrl: string, appUrl: string) => {
     const { token } = (await answer.json()) as { token: string }
     return { authorization: `Bearer ${token}` }
   }
-  return { ids, as }
+  return { ids, general, as }
 }

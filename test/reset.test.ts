@@ -77,7 +77,7 @@ describe('the demo reset', () => {
   beforeAll(async () => {
     seeded = await demoState()
 
-    // Another workspace, with a channel, a message, a reaction and a read position of its own.
+    // Another workspace, with its #general, a message, a reaction and a read position of its own.
     await createUser(auth, { email: 'cara@example.com', name: 'Cara Lindqvist', password: 'a-long-password-1' })
     await createOrganization(auth, { name: 'Southwind', slug: 'southwind', owner: 'cara@example.com' })
     southwind = await organizationId('southwind')
@@ -85,7 +85,7 @@ describe('the demo reset', () => {
     await sql.begin(async (tx) => {
       await tx`set local changes.capture = 'off'`
       const [channel] = await tx<{ id: number }[]>`
-        insert into public.channels (organization_id, name, topic, author_id) values (${southwind}, 'general', 'Ours', ${cara}) returning id`
+        update public.channels set topic = 'Ours' where organization_id = ${southwind} and name = 'general' returning id`
       const [message] = await tx<{ id: number }[]>`
         insert into public.messages (organization_id, channel_id, author_id, body, mentions) values (${southwind}, ${channel!.id}, ${cara}, 'Hello Southwind', '[]') returning id`
       await tx`insert into public.reactions (organization_id, message_id, user_id, emoji) values (${southwind}, ${message!.id}, ${cara}, 'heart')`

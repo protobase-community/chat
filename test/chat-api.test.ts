@@ -12,6 +12,7 @@ let database: Awaited<ReturnType<typeof throwawayDatabase>>
 let people: Record<'ana' | 'ben' | 'cara', Headers>
 let ids: Record<'ana' | 'ben' | 'cara', string>
 let general: number
+let southwindGeneral: number
 
 const api = (path: string, headers: Headers, init: RequestInit = {}) =>
   fetch(`${chat.url}/api/v1${path}`, { ...init, headers: { ...headers, 'content-type': 'application/json' } })
@@ -23,9 +24,8 @@ beforeAll(async () => {
   const workspaces = await makeWorkspaces(database.databaseUrl, chat.url)
   people = { ana: await workspaces.as(ana), ben: await workspaces.as(ben), cara: await workspaces.as(cara) }
   ids = workspaces.ids
-  const created = await post('/channels', people.ana, { name: 'general', topic: 'Everything' })
-  if (created.status !== 201) throw new Error(`Creating #general answered ${created.status}: ${await created.text()}`)
-  general = (await created.json()).id
+  general = workspaces.general.northwind
+  southwindGeneral = workspaces.general.southwind
 }, 180_000)
 
 afterAll(async () => {
@@ -68,14 +68,15 @@ describe('a message', () => {
 describe('another workspace', () => {
   it('neither lists nor reads the channels and messages', async () => {
     const channels = await (await api('/channels', people.cara)).json()
-    expect(channels.items).toEqual([])
+    expect(channels.items.map((channel: { id: number }) => channel.id)).toEqual([southwindGeneral])
     expect((await api(`/channels/${general}`, people.cara)).status).toBe(404)
     const messages = await (await api(`/messages?filter=${encodeURIComponent(`channel_id = ${general}`)}`, people.cara)).json()
     expect(messages.items).toEqual([])
   })
 
   it('has channels of its own, of the same name', async () => {
-    expect((await post('/channels', people.cara, { name: 'general' })).status).toBe(201)
+    const theirs = await (await api(`/channels/${southwindGeneral}`, people.cara)).json()
+    expect(theirs.name).toBe('general')
     const names = (await (await api('/channels', people.ana)).json()).items.map((channel: { name: string }) => channel.name)
     expect(names).toEqual(['general'])
   })

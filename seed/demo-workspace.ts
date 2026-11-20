@@ -67,8 +67,11 @@ export const seedDemoWorkspace = async (auth: AdminAuth, sql: postgres.Sql, toda
     for (const channel of channels as readonly DemoChannel[]) {
       const kind = channel.members ? 'private' : 'public'
       const members = channel.members ? tx.json(channel.members.map(userId)) : null
+      // A new workspace's own #general has no topic yet: it gets the demo's.
       const [found] = await tx<{ id: number }[]>`
-        select id from public.channels where organization_id = ${organization.id} and name = ${channel.name} and kind = ${kind}`
+        update public.channels set topic = coalesce(topic, ${channel.topic})
+        where organization_id = ${organization.id} and name = ${channel.name} and kind = ${kind}
+        returning id`
       const [row] = found
         ? [found]
         : await tx<{ id: number }[]>`
