@@ -1,4 +1,5 @@
-import { Button } from '@protobase/ui'
+import type { AppAddress } from '@protobase/schema'
+import { AppLink, Button, buttonClass } from '@protobase/ui'
 import { emojiLabels, emojiOrder, type Emoji } from './emoji'
 import type { ReactionGroup } from './reaction'
 
@@ -6,7 +7,7 @@ type Props = {
   groups: readonly ReactionGroup[]
   onReact: (emoji: Emoji) => void
   /** Given for a message of the conversation's flow, which a thread can start at. */
-  onReply?: () => void
+  replyTo?: AppAddress
   /** Given for the reader's own message only. */
   onEdit?: () => void
   /** Given for a message the reader may delete, their own or anyone's to a moderator, while nobody replied to it. */
@@ -18,7 +19,7 @@ type Props = {
  * the keyboard, so it takes no room of its own: react with an emoji of the set they have not reacted with yet, reply in
  * its thread, edit their own message, and delete one they may.
  */
-export const MessageActions = ({ groups, onReact, onReply, onEdit, onDelete }: Props) => {
+export const MessageActions = ({ groups, onReact, replyTo, onEdit, onDelete }: Props) => {
   const reacted = new Set(groups.filter((group) => group.mine).map((group) => group.emoji))
   return (
     <div className="pointer-events-none absolute -top-3 right-0 flex items-center gap-0.5 rounded-md border border-border bg-background p-0.5 opacity-0 shadow-sm transition-opacity group-hover:pointer-events-auto group-hover:opacity-100 focus-within:pointer-events-auto focus-within:opacity-100">
@@ -29,10 +30,10 @@ export const MessageActions = ({ groups, onReact, onReply, onEdit, onDelete }: P
             <span aria-hidden>{emojiLabels[emoji].symbol}</span>
           </Button>
         ))}
-      {onReply && (
-        <Button size="sm" variant="ghost" onClick={onReply}>
+      {replyTo && (
+        <AppLink to={replyTo} className={buttonClass({ size: 'sm', variant: 'ghost' })}>
           Reply in thread
-        </Button>
+        </AppLink>
       )}
       {onEdit && (
         <Button size="sm" variant="ghost" onClick={onEdit}>

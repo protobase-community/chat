@@ -41,6 +41,8 @@ export const messages = resource('messages')
     last_reply_at: f.timestamp().readOnly().optional(),
   })
   .primaryKey((r) => r.id)
+  // Search finds a message by the words of its body, in the conversations its reader may read.
+  .search((r) => [r.body])
   .tenant((r) => r.organization_id)
   .author((r) => r.author_id)
   // Whose a message is, for `messages.delete.own`: a participant deletes their own, a moderator any they read.

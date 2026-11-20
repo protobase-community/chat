@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import type { AppAddress } from '@protobase/schema'
 import { ChatMessage, MentionedText } from '@protobase/ui'
 import type { Attachment } from './attachment'
 import { DeleteMessageDialog } from './delete-message-dialog'
@@ -22,7 +23,8 @@ export type MessageHandlers = {
   onDelete: (messageId: number, attachmentIds: number[]) => void
   onReact: (messageId: number, emoji: Emoji) => void
   onUnreact: (reaction: Reaction) => void
-  onOpenThread?: (messageId: number) => void
+  /** The address of a message's thread, for the links that open it. */
+  threadTo?: (messageId: number) => AppAddress
 }
 
 type Props = MessageHandlers & {
@@ -40,11 +42,11 @@ type Props = MessageHandlers & {
  * reader can do to it in a bar shown while they point at it. A message with replies is not deleted, so nobody's replies
  * go with it.
  */
-export const ConversationMessage = ({ message, continued, mine, reactions, attachments, member, onEdit, onDelete, onReact, onUnreact, onOpenThread }: Props) => {
+export const ConversationMessage = ({ message, continued, mine, reactions, attachments, member, onEdit, onDelete, onReact, onUnreact, threadTo }: Props) => {
   const [editing, setEditing] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const react = (emoji: Emoji) => onReact(message.id, emoji)
-  const openThread = onOpenThread && (() => onOpenThread(message.id))
+  const thread = threadTo?.(message.id)
   const deletable = (mine || message.deletable) && message.reply_count === 0
   const footer = (message.edited_at || reactions.length > 0) && (
     <span className="flex flex-wrap items-center gap-1">
@@ -58,7 +60,7 @@ export const ConversationMessage = ({ message, continued, mine, reactions, attac
         <MessageActions
           groups={reactions}
           onReact={react}
-          onReply={openThread}
+          replyTo={thread}
           onEdit={mine ? () => setEditing(true) : undefined}
           onDelete={deletable ? () => setDeleting(true) : undefined}
         />
@@ -78,7 +80,7 @@ export const ConversationMessage = ({ message, continued, mine, reactions, attac
           message.body !== null && <MentionedText text={message.body} mentions={message.mentions.map((id) => ({ name: member(id)?.name }))} />
         )}
         {attachments.length > 0 && <MessageAttachments attachments={attachments} />}
-        {openThread && message.reply_count > 0 && <ThreadSummary count={message.reply_count} lastReplyAt={message.last_reply_at} onOpen={openThread} />}
+        {thread && message.reply_count > 0 && <ThreadSummary count={message.reply_count} lastReplyAt={message.last_reply_at} to={thread} />}
       </ChatMessage>
       {deleting && (
         <DeleteMessageDialog
