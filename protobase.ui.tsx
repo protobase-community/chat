@@ -1,5 +1,5 @@
 import { defineUi } from '@protobase/ui'
-import { authorName } from './components/author-name'
+import { messageTitle } from './components/message-title'
 import { memberNames } from './components/member-names'
 import { PresenceTracker } from './components/presence-tracker'
 import { useDirectMessageMarks } from './components/use-direct-message-marks'
@@ -15,7 +15,7 @@ export { MessagePlace } from './components/message-place'
 // is online or away, which the sidebar, the Members page and `usePresence()` show, and the shell's actions, drawn on
 // every page: the tracker of the page on its workspace's presence, which shows nothing.
 export default defineUi({
-  titles: { memberNames, authorName },
+  titles: { memberNames, messageTitle },
   marks: { unread: useUnreadMarks, directMessages: useDirectMessageMarks },
   presence: useWorkspacePresence,
   shell: { actions: PresenceTracker },

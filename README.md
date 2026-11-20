@@ -86,7 +86,7 @@ app on it with `protobase dev`.
 | "Set a status" in the profile menu: busy, do not disturb or a text such as "Having lunch", with when it clears, shown beside the name whether or not the person has a page open | This version |
 | Do not disturb holds a person's push notifications, keeping them in the bell | This version |
 | "Name is typing…" above the composer, and the thread's, while others write there | This version |
-| Message search | Later |
+| Message search from the top bar: each result says who wrote it, what kind of message it is and when, over its text, and opens it in its conversation, a reply in its thread beside it; "Search messages" in the profile menu lists every match, newest first, with where it was written. Only messages of conversations the reader may read are found | This version |
 | Voice and video calls in a channel or direct message, with screen sharing, peer to peer between the browsers, for a small group: **Start call** in its header, or "Call in progress · 3 · Join" while one goes on, live | This version |
 | The call beside the conversation's messages, above them on a phone, so what people write during a call is the conversation's own messages | This version |
 | A direct message's call rings its other people on any page of the chat, with Accept and Decline, and a missed call stays in the bell; someone on do not disturb is not rung, and finds the call in their bell | This version |
@@ -95,6 +95,12 @@ app on it with `protobase dev`.
 <gap>A group direct message's row in the sidebar cannot show its people's dots and status marks because a sidebar mark naming more than one person is not implemented.</gap> Its tooltip says them, such as "Sam Okafor: Online; Lena Fischer: Away, On vacation", and so does the conversation's header.
 
 <gap>The sidebar cannot mark more than a person's first 100 channels and 100 direct messages because unread counts over more conversations are not implemented.</gap>
+
+<gap>A search result cannot open its conversation scrolled to the message and marked because opening the chat at a given message is not implemented.</gap> A reply opens with its thread beside its conversation.
+
+<gap>The top bar's search cannot show the newest matches first because an order for the global search's results is not implemented.</gap> It shows the first five matches, oldest first; "Search messages" lists them all, newest first.
+
+<gap>The messages list cannot drop its "New message" button because hiding a list's create button while the API takes creates is not implemented.</gap> Messages are written in their conversation.
 
 <gap>A conversation with more unread messages than one page of 50 cannot show its "New messages" line because opening on a message before the latest page is not implemented.</gap> It opens at the end, still bold in the sidebar until read there.
 
@@ -140,6 +146,13 @@ app on it with `protobase dev`.
   an invited person the **Participant** role, which `config/roles.ts` lets read and start channels and direct messages
   and post in them, or the **Moderator** role, which does all that and deletes anyone's messages there.
   `create: 'everyone'` lets anyone signed in start a workspace of their own.
+- **Messages are found by Protobase's search.** `.search((r) => [r.body])` in `config/messages/data.ts` makes the top
+  bar's [global search](https://docs.protobase.net/reference/ui-config/) find messages by their words, through the
+  messages API with the reader's own access, so a private conversation's messages are found only by its members.
+  `db/migrations/028_message_search.sql` adds the pg_trgm index the search reads. A result links to the message's own
+  address, `/messages/<id>`, whose record page (`components/message-place.tsx`) opens the message in its conversation;
+  a thread open beside a conversation is the page's `panel` (`?panel=thread-<id>`), made and read in
+  `components/thread-address.ts`, so every thread link is a real link and Back closes it.
 - **A new workspace starts with #general.** `onOrganizationCreated` in `auth/hooks.ts`, Protobase's
   [auth hooks](https://docs.protobase.net/reference/auth/), adds a public #general, its creator's, when a workspace is
   created, by any route. A workspace made before it keeps the channels it has.
