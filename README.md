@@ -118,6 +118,8 @@ app on it with `protobase dev`.
 
 <gap>A message cannot be answered with any emoji outside the six of the set because an emoji picker is not implemented.</gap>
 
+<gap>On a touch screen, part of a message's text cannot be selected because a Select text action is not implemented.</gap> Copy text in its actions copies the whole message.
+
 <gap>The message box cannot show that it takes the files dragged over it because a drop highlight in Protobase's `Composer` is not implemented.</gap> Dropping them on it still adds them.
 
 <gap>A file pasted outside the message box cannot be shared because taking pasted files anywhere else on the conversation's page is not implemented.</gap> Click into the box, then paste.
