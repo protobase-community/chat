@@ -4,7 +4,7 @@ import { ana, ben, cara, dan, makeWorkspaces } from './workspaces'
 
 // Message search as the running app serves it, against Postgres: the messages API's `search(...)`, which the top bar's
 // search and the messages list send, finds a message by the words of its body, only in the conversations its reader
-// reads, with what opens it in its place. Ana, Ben and Dan share Northwind, Cara is alone in Southwind; Dan is not in
+// reads, with where it was written. Ana, Ben and Dan share Northwind, Cara is alone in Southwind; Dan is not in
 // Ana and Ben's private channel.
 
 type Headers = Record<string, string>
@@ -70,7 +70,7 @@ describe('message search', () => {
     expect(await found('dan', 'mangosteen')).toEqual([])
   })
 
-  it('finds a reply with its thread, which opens it beside its conversation', async () => {
+  it('finds a reply with its conversation and its thread', async () => {
     const first = await say('ana', { channel_id: general }, 'Who takes the release?')
     const reply = await say('dan', { channel_id: general, thread_id: first.id }, 'I take the kumquat release')
     const [hit] = await search('ben', 'kumquat')

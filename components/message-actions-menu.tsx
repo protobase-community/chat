@@ -1,5 +1,4 @@
-import type { AppAddress } from '@protobase/schema'
-import { AppLink, Button, buttonClass, ResponsiveDialog } from '@protobase/ui'
+import { Button, ResponsiveDialog } from '@protobase/ui'
 import { emojiLabels, emojiOrder, type Emoji } from './emoji'
 import type { Reaction, ReactionGroup } from './reaction'
 
@@ -13,7 +12,7 @@ type Props = {
   onReact: (emoji: Emoji) => void
   onUnreact: (reaction: Reaction) => void
   /** Given for a message of the conversation's flow, which a thread can start at. */
-  replyTo?: AppAddress
+  onReply?: () => void
   /** Given for a message with text. */
   onCopy?: () => void
   /** Given for the reader's own message only. */
@@ -28,7 +27,7 @@ type Props = {
  * thread, copy its text, edit their own message and delete one they may. A sheet from the bottom at mobile width, a
  * dialog on a wider touch screen. Each choice closes it.
  */
-export const MessageActionsMenu = ({ onClose, title, preview, groups, onReact, onUnreact, replyTo, onCopy, onEdit, onDelete }: Props) => {
+export const MessageActionsMenu = ({ onClose, title, preview, groups, onReact, onUnreact, onReply, onCopy, onEdit, onDelete }: Props) => {
   const mine = new Map(groups.flatMap((group) => (group.mine ? [[group.emoji, group.mine] as const] : [])))
   const choose = (onChoose: () => void) => () => {
     onClose()
@@ -51,11 +50,7 @@ export const MessageActionsMenu = ({ onClose, title, preview, groups, onReact, o
           )}
           {onEdit && <Button onClick={choose(onEdit)}>Edit</Button>}
           {onCopy && <Button onClick={choose(onCopy)}>Copy text</Button>}
-          {replyTo && (
-            <AppLink to={replyTo} className={buttonClass()} onClick={onClose}>
-              Reply in thread
-            </AppLink>
-          )}
+          {onReply && <Button onClick={choose(onReply)}>Reply in thread</Button>}
         </>
       }
     >

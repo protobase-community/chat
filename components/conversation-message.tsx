@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import type { AppAddress } from '@protobase/schema'
 import { buttonClass, ChatMessage, MentionedText } from '@protobase/ui'
 import type { Attachment } from './attachment'
 import { DeleteMessageDialog } from './delete-message-dialog'
@@ -25,8 +24,7 @@ export type MessageHandlers = {
   onDelete: (messageId: number, attachmentIds: number[]) => void
   onReact: (messageId: number, emoji: Emoji) => void
   onUnreact: (reaction: Reaction) => void
-  /** The address of a message's thread, for the links that open it. */
-  threadTo?: (messageId: number) => AppAddress
+  onOpenThread?: (messageId: number) => void
 }
 
 type Props = MessageHandlers & {
@@ -44,13 +42,13 @@ type Props = MessageHandlers & {
  * reader can do to it: in a bar shown while they point at it, or, by touch, in a sheet a tap or long-press opens, which
  * also copies its text. A message with replies is not deleted, so nobody's replies go with it.
  */
-export const ConversationMessage = ({ message, continued, mine, reactions, attachments, member, onEdit, onDelete, onReact, onUnreact, threadTo }: Props) => {
+export const ConversationMessage = ({ message, continued, mine, reactions, attachments, member, onEdit, onDelete, onReact, onUnreact, onOpenThread }: Props) => {
   const [editing, setEditing] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [acting, setActing] = useState(false)
   const press = useMessagePress(() => setActing(true))
   const react = (emoji: Emoji) => onReact(message.id, emoji)
-  const thread = threadTo?.(message.id)
+  const openThread = onOpenThread && (() => onOpenThread(message.id))
   const deletable = (mine || message.deletable) && message.reply_count === 0
   const edit = mine ? () => setEditing(true) : undefined
   const remove = deletable ? () => setDeleting(true) : undefined
@@ -71,7 +69,7 @@ export const ConversationMessage = ({ message, continued, mine, reactions, attac
         className={`group relative rounded-md [@media(hover:none)]:select-none [@media(hover:none)]:[-webkit-touch-callout:none] [&_a]:[-webkit-touch-callout:default] ${acting ? 'bg-muted' : ''}`}
         {...(editing ? {} : press)}
       >
-        {!editing && <MessageActions groups={reactions} onReact={react} replyTo={thread} onEdit={edit} onDelete={remove} />}
+        {!editing && <MessageActions groups={reactions} onReact={react} onReply={openThread} onEdit={edit} onDelete={remove} />}
         {!editing && (
           // On a touch screen, the way in for a screen reader or a keyboard, out of sight until it has the focus.
           <button
@@ -97,7 +95,7 @@ export const ConversationMessage = ({ message, continued, mine, reactions, attac
             message.body !== null && <MentionedText text={message.body} mentions={message.mentions.map((id) => ({ name: member(id)?.name }))} />
           )}
           {attachments.length > 0 && <MessageAttachments attachments={attachments} />}
-          {thread && message.reply_count > 0 && <ThreadSummary count={message.reply_count} lastReplyAt={message.last_reply_at} to={thread} />}
+          {openThread && message.reply_count > 0 && <ThreadSummary count={message.reply_count} lastReplyAt={message.last_reply_at} onOpen={openThread} />}
         </ChatMessage>
       </div>
       {deleting && (
@@ -117,7 +115,7 @@ export const ConversationMessage = ({ message, continued, mine, reactions, attac
           groups={reactions}
           onReact={react}
           onUnreact={onUnreact}
-          replyTo={thread}
+          onReply={openThread}
           onCopy={copy}
           onEdit={edit}
           onDelete={remove}

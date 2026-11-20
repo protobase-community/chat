@@ -1,4 +1,4 @@
-import { useMemo, type ReactNode } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { ChatThread, useMembers, useSignedInUser } from '@protobase/ui'
 import type { Conversation } from './conversation'
 import { ConversationCall } from './conversation-call'
@@ -11,15 +11,13 @@ import { useConversationTyping } from './use-conversation-typing'
 import { useMessageAttachments } from './use-message-attachments'
 import { useMessageReactions } from './use-message-reactions'
 import { useNewLine } from './use-new-line'
-import { useOpenThread } from './use-open-thread'
 import { useReadPosition } from './use-read-position'
-import { useThreadFirst } from './use-thread-first'
 
 type Props = { conversation: Conversation; header: ReactNode; empty: string; placeholder: string }
 
 /**
  * A conversation's chat, filling its record page: the header, its messages outside threads, followed live, and the
- * composer under them, with the thread its address opens beside them, such as a search result for a reply. The page does not scroll; the messages scroll in a
+ * composer under them, with the thread the reader opened beside them. The page does not scroll; the messages scroll in a
  * box of their own, so the composer stays in view while a reader goes back through them. It shows its messages once the reader's read position is there
  * too, so it opens on the "New messages" line above the first one they have not read, and it moves their position to the
  * newest message whenever they have read to the end. Its messages carry their files, reactions and replies' count, and
@@ -30,8 +28,8 @@ type Props = { conversation: Conversation; header: ReactNode; empty: string; pla
  */
 export const ConversationChat = ({ conversation, header, empty, placeholder }: Props) => {
   const chat = useConversationMessages(conversation)
-  const thread = useOpenThread(conversation)
-  const threadFirst = useThreadFirst(conversation, chat.messages, thread.threadId)
+  const [threadId, setThreadId] = useState<number>()
+  const threadFirst = chat.messages.find((message) => message.id === threadId)
   const messageIds = useMemo(() => chat.messages.map((message) => message.id), [chat.messages])
   const reactions = useMessageReactions(messageIds)
   const attachments = useMessageAttachments(messageIds)
@@ -45,7 +43,7 @@ export const ConversationChat = ({ conversation, header, empty, placeholder }: P
     const newest = chat.messages.at(-1)
     if (newest) position.readTo(newest.id)
   }
-  const error = chat.error ?? position.error ?? reactions.error ?? attachments.error ?? threadFirst.error
+  const error = chat.error ?? position.error ?? reactions.error ?? attachments.error
   return (
     <div className="flex min-h-0 flex-col md:flex-row">
       <ConversationCall className="h-1/2 shrink-0 border-b border-border md:h-auto md:w-3/5 md:border-r md:border-b-0" />
@@ -71,7 +69,7 @@ export const ConversationChat = ({ conversation, header, empty, placeholder }: P
               onDelete={chat.remove}
               onReact={reactions.react}
               onUnreact={reactions.unreact}
-              threadTo={thread.threadTo}
+              onOpenThread={setThreadId}
             />
           )}
         </ChatThread>
@@ -81,17 +79,17 @@ export const ConversationChat = ({ conversation, header, empty, placeholder }: P
           <ConversationComposer placeholder={placeholder} onSend={chat.send} onTyping={(on) => typing.send({ typing: on, thread: null })} />
         </div>
       </div>
-      {threadFirst.first && me !== undefined && (
+      {threadFirst && me !== undefined && (
         <ThreadPanel
-          key={threadFirst.first.id}
+          key={threadFirst.id}
           conversation={conversation}
-          first={threadFirst.first}
+          first={threadFirst}
           me={me}
           member={member}
           typing={typing}
           onEditFirst={chat.edit}
           onDeleteFirst={chat.remove}
-          onClose={thread.close}
+          onClose={() => setThreadId(undefined)}
         />
       )}
     </div>

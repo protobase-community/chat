@@ -54,7 +54,7 @@ export const notifyOfMessages = subscription('notifyOfMessages', {
     const recipients = await readersAmong(db, organizationId, toldOf({ author_id: String(message.author_id), mentions: ids(message.mentions) }, conversation))
     if (recipients.length === 0) return
     const author = await db.selectFrom('auth.user').select('name').where('id', '=', String(message.author_id)).executeTakeFirstOrThrow()
-    const notification = notificationOf({ sender: author.name, body: message.body == null ? null : String(message.body), threadId: message.thread_id == null ? null : Number(message.thread_id) }, conversation, appOrigin())
+    const notification = notificationOf({ sender: author.name, body: message.body == null ? null : String(message.body), reply: message.thread_id != null }, conversation, appOrigin())
     await sendNotification(db, { userIds: recipients, inbox: true }, notification)
   },
 })
