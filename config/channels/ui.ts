@@ -22,6 +22,9 @@ export const channelsView = view<typeof channels>('channels')
     member_ids: r.member_ids.label('Members').widget('members').help('Of a private channel: who reads it besides you', { when: 'editing' }),
   }))
   .list((r) => ({ columns: [r.name, r.topic, r.kind], sort: [[r.name, 'asc']] }))
+  // A chat's channels are started in it, never moved in or out as files.
+  .import(false)
+  .export(false)
   .recordMode('read')
   .record({ component: ChannelChat })
   .layout((r) => [l.section('Channel', [r.topic, r.kind]), l.section('Members', [r.member_ids], { when: 'kind = "private"' })])
