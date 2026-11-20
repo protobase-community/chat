@@ -17,12 +17,13 @@ type Props = {
 /**
  * What the reader can do to a message, a bar over its top right corner shown while they point at it or move into it with
  * the keyboard, so it takes no room of its own: react with an emoji of the set they have not reacted with yet, reply in
- * its thread, edit their own message, and delete one they may.
+ * its thread, edit their own message, and delete one they may. Only a screen that can point shows it; on a touch screen
+ * a tap or long-press opens `MessageActionsMenu` instead.
  */
 export const MessageActions = ({ groups, onReact, replyTo, onEdit, onDelete }: Props) => {
   const reacted = new Set(groups.filter((group) => group.mine).map((group) => group.emoji))
   return (
-    <div className="pointer-events-none absolute -top-3 right-0 flex items-center gap-0.5 rounded-md border border-border bg-background p-0.5 opacity-0 shadow-sm transition-opacity group-hover:pointer-events-auto group-hover:opacity-100 focus-within:pointer-events-auto focus-within:opacity-100">
+    <div className="pointer-events-none absolute -top-3 right-0 hidden items-center [@media(hover:hover)]:flex gap-0.5 rounded-md border border-border bg-background p-0.5 opacity-0 shadow-sm transition-opacity group-hover:pointer-events-auto group-hover:opacity-100 focus-within:pointer-events-auto focus-within:opacity-100">
       {emojiOrder
         .filter((emoji) => !reacted.has(emoji))
         .map((emoji) => (
