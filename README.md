@@ -80,6 +80,7 @@ app on it with `protobase dev`.
 | Editing and deleting one's own messages, "(edited)" under a changed one, both reaching others live | This version |
 | Reacting with an emoji of a small set: each reaction's count under the message, who reacted on hover, one's own highlighted, live | This version |
 | Files in messages, with or without text, picked with 📎, pasted, such as a screenshot, or dropped on the message box: images shown as previews, any other file as its name and size to download, at most 10 of up to 20 MB each | This version |
+| On a touch screen, a tap or long-press on a message opens its actions, in a sheet at mobile width: react, reply in thread, copy its text, and edit or delete it where allowed | This version |
 | Replying in a thread, in a panel beside the conversation, with mentions and files: the conversation shows under a message its number of replies and when the last came, both live | This version |
 | Workspace moderators, its owners and the admins they pick, who delete anyone's message in a conversation they read, never edit it | This version |
 | Who is online or away beside their name, in a direct message's header, the sidebar's direct messages and the Members page, which a workspace's owners and admins open: online while a page of theirs shows and was used in the last 10 minutes, several tabs counting as one | This version |
@@ -117,6 +118,8 @@ app on it with `protobase dev`.
 <gap>A deleted message's notification cannot be taken back from the bell because withdrawing a sent notification is not implemented.</gap>
 
 <gap>A message cannot be answered with any emoji outside the six of the set because an emoji picker is not implemented.</gap>
+
+<gap>On a touch screen, part of a message's text cannot be selected because a Select text action is not implemented.</gap> Copy text in its actions copies the whole message.
 
 <gap>The message box cannot show that it takes the files dragged over it because a drop highlight in Protobase's `Composer` is not implemented.</gap> Dropping them on it still adds them.
 
