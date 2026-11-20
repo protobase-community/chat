@@ -116,8 +116,6 @@ app on it with `protobase dev`.
 
 <gap>A thread's first message cannot be deleted while it has replies because keeping a deleted message's place in its thread is not implemented.</gap> Its replies go first, each deleted by its author or a moderator, so nobody's replies are deleted with it.
 
-<gap>A notification of a reply cannot open its thread because an address for a thread in its conversation's page is not implemented.</gap> It opens the conversation, where the thread's first message shows its replies.
-
 <gap>Mentioning someone in an edit cannot notify them because notifying of edited messages is not implemented.</gap> The edit does count in their unread mentions.
 
 <gap>A deleted message's notification cannot be taken back from the bell because withdrawing a sent notification is not implemented.</gap>
