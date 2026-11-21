@@ -87,7 +87,7 @@ app on it with `protobase dev`.
 | "Set a status" in the profile menu: busy, do not disturb or a text such as "Having lunch", with when it clears, shown beside the name whether or not the person has a page open | This version |
 | Do not disturb holds a person's push notifications, keeping them in the bell | This version |
 | "Name is typing…" above the composer, and the thread's, while others write there | This version |
-| Message search from the top bar: each result shows its text and when it was sent, and opens the message's page, which links to its channel or direct message; "Search messages" in the profile menu lists every match, newest first, with where it was written. Only messages of conversations the reader may read are found | This version |
+| Message search from the top bar: each result shows its text and when it was sent, and opens the message's channel or direct message; "Search messages" in the profile menu lists every match, newest first, with where it was written. Only messages of conversations the reader may read are found | This version |
 | Voice and video calls in a channel or direct message, with screen sharing, peer to peer between the browsers, for a small group: **Start call** in its header, or "Call in progress · 3 · Join" while one goes on, live | This version |
 | The call beside the conversation's messages, above them on a phone, so what people write during a call is the conversation's own messages | This version |
 | A direct message's call rings its other people on any page of the chat, with Accept and Decline, and a missed call stays in the bell; someone on do not disturb is not rung, and finds the call in their bell | This version |
@@ -97,7 +97,7 @@ app on it with `protobase dev`.
 
 <gap>The sidebar cannot mark more than a person's first 100 channels and 100 direct messages because unread counts over more conversations are not implemented.</gap>
 
-<gap>A search result cannot open its conversation, a reply's thread or the message's place in it because opening a record at an address its fields name is not implemented.</gap> The message's page links to its channel or direct message.
+<gap>A search result cannot open a reply's thread or scroll to the message because opening a conversation at a given message is not implemented.</gap> It opens the message's channel or direct message, where a reply's thread is on its first message.
 
 <gap>The top bar's search cannot show the newest matches first because an order for the global search's results is not implemented.</gap> It shows the first five matches, oldest first; "Search messages" lists them all, newest first.
 
@@ -152,9 +152,9 @@ app on it with `protobase dev`.
 - **Messages are found by Protobase's search.** `.search((r) => [r.body])` in `config/messages/data.ts` makes the top
   bar's [global search](https://docs.protobase.net/reference/ui-config/) find messages by their words, through the
   messages API with the reader's own access, so a private conversation's messages are found only by its members.
-  `db/migrations/028_message_search.sql` adds the pg_trgm index the search reads. A result opens the message's
-  standard record page, `/messages/<id>`, whose link actions in `config/messages/ui.ts` open its channel or direct
-  message.
+  `db/migrations/028_message_search.sql` adds the pg_trgm index the search reads. A result links to the message's
+  channel or direct message: `.recordOpens([...])` in `config/messages/ui.ts` opens `/messages/<id>` in the first of
+  them its fields fill. Its standard page, shown only when neither is in reach, links to them with its actions.
 - **A new workspace starts with #general.** `onOrganizationCreated` in `auth/hooks.ts`, Protobase's
   [auth hooks](https://docs.protobase.net/reference/auth/), adds a public #general, its creator's, when a workspace is
   created, by any route. A workspace made before it keeps the channels it has.

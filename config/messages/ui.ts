@@ -4,8 +4,8 @@ import type { messages } from './data'
 /**
  * Messages are read and written on their conversation's page. The view makes them searchable: the top bar's search
  * finds them by their words, and the user menu's entry opens their list, every message the reader may read with where it
- * was written, newest first, with the list's search, for more results than the top bar shows. A message's page links to
- * its conversation.
+ * was written, newest first, with the list's search, for more results than the top bar shows. A message opens in its
+ * conversation: its channel, else its direct message.
  */
 export const messagesView = view<typeof messages>('messages')
   .names({ singular: 'Message', plural: 'Messages' })
@@ -22,12 +22,17 @@ export const messagesView = view<typeof messages>('messages')
   .import(false)
   .export(false)
   .recordMode('read')
+  .recordOpens([
+    { kind: 'record', resource: 'channels', key: '{{channel_id}}' },
+    { kind: 'record', resource: 'direct_messages', key: '{{direct_message_id}}' },
+  ])
   // Its page says what was written where and when, not the fields the chat keeps for itself, such as its mentions.
   // A thread's first message lists its replies, oldest first, as its thread reads.
   .layout((r) => [
     l.section('Message', [r.body, r.channel_id, r.direct_message_id, r.sent_at, r.thread_id]),
     l.related('Replies', { resource: 'messages', field: 'thread_id', sort: 'id asc', columns: ['body', 'sent_at'] }),
   ])
+  // The standard page, which the record opens in place of only when its conversation is out of reach, links to it.
   .actions((a) => [
     a.link('open_channel', { label: 'Open channel', when: 'channel_id:*', to: { kind: 'record', resource: 'channels', key: '{{channel_id}}' } }),
     a.link('open_direct_message', { label: 'Open direct message', when: 'direct_message_id:*', to: { kind: 'record', resource: 'direct_messages', key: '{{direct_message_id}}' } }),
