@@ -31,8 +31,9 @@ export const messages = resource('messages')
     author_id: f.text().readOnly().filterable(),
     // Null for a message of files alone; the database refuses a message with neither text nor files.
     body: f.text().min(1).max(10_000).optional(),
-    // The user ids of the people the message mentions, as the composer gives them: a JSON array, `[]` for none.
-    mentions: f.json().filterable(),
+    // The user ids of the people the message mentions, as the composer gives them: a JSON array, `[]` for none, as a
+    // message from the create form, which has no input for them, has.
+    mentions: f.json().default([]).filterable(),
     sent_at: f.timestamp().readOnly().dbDefault(),
     // When its author last changed its body or mentions, set by the database; null for a message never edited.
     edited_at: f.timestamp().readOnly().optional(),
@@ -41,6 +42,8 @@ export const messages = resource('messages')
     last_reply_at: f.timestamp().readOnly().optional(),
   })
   .primaryKey((r) => r.id)
+  // Search finds a message by the words of its body, in the conversations its reader may read.
+  .search((r) => [r.body])
   .tenant((r) => r.organization_id)
   .author((r) => r.author_id)
   // Whose a message is, for `messages.delete.own`: a participant deletes their own, a moderator any they read.

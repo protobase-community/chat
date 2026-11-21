@@ -53,6 +53,12 @@ describe('a message', () => {
     expect((await posted.json()).mentions).toEqual([ids.ben])
   })
 
+  it('mentions nobody when it gives no mentions, as the create form does', async () => {
+    const posted = await post('/messages', people.ana, { channel_id: general, body: 'From the form' })
+    expect(posted.status).toBe(201)
+    expect((await posted.json()).mentions).toEqual([])
+  })
+
   it('refuses mentions that are not a list of user ids', async () => {
     for (const mentions of ['ben-id', [1], Array.from({ length: 21 }, (_, index) => `id-${index}`)]) {
       expect((await post('/messages', people.ana, { channel_id: general, body: 'Hm', mentions })).status).toBe(400)
