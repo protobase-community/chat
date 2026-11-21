@@ -40,6 +40,8 @@ const arrived = async (who: Who, body: string) => {
   }
   throw new Error(`${who} got no notification of "${body}"`)
 }
+/** A test's time: each of its notifications may take `arrived`'s 10 seconds. */
+const waits = 30_000
 /** Whether `who` was told of `body`, asked once a later message to them, `probe`, has reached them. */
 const told = async (who: Who, body: string, probe: string) => {
   await arrived(who, probe)
@@ -69,7 +71,7 @@ describe('a mention', () => {
     }
     await say('ben', { channel_id: general.id }, 'Noted, @Ana Silva', [ids.ana])
     expect(await told('ana', body, 'Noted, @Ana Silva')).toBe(false)
-  })
+  }, waits)
 
   it('opens the conversation for its recipient', async () => {
     const body = 'Have a look, @Ben Adeyemi'
@@ -78,7 +80,7 @@ describe('a mention', () => {
     const answer = await api(new URL(url!).pathname, people.ben)
     expect(answer.status).toBe(200)
     expect(await answer.json()).toMatchObject({ id: general.id, name: 'general' })
-  })
+  }, waits)
 
   it('of someone outside a private channel tells no one', async () => {
     const plans = await start('ana', '/channels', { name: 'plans', kind: 'private', member_ids: [ids.ben] })
@@ -86,14 +88,14 @@ describe('a mention', () => {
     await say('ana', { channel_id: plans.id }, body, [ids.dan])
     await say('ana', { channel_id: general.id }, 'Ping, @Dan Mwangi', [ids.dan])
     expect(await told('dan', body, 'Ping, @Dan Mwangi')).toBe(false)
-  })
+  }, waits)
 
   it('in a reply tells the person it mentions, naming the thread', async () => {
     const thread = await say('ben', { channel_id: general.id }, 'Who has the keys?')
     const body = 'I think @Dan Mwangi has them'
     await say('ana', { channel_id: general.id, thread_id: thread.id }, body, [ids.dan])
     expect(await arrived('dan', body)).toMatchObject({ title: 'Ana Silva mentioned you in a thread in #general', url: `${chat.url}/channels/${general.id}` })
-  })
+  }, waits)
 
   it('of someone of another workspace tells no one', async () => {
     await say('ana', { channel_id: general.id }, 'Hello, Cara', [ids.cara])
@@ -101,7 +103,7 @@ describe('a mention', () => {
     await say('ana', { channel_id: general.id }, 'Hello, @Ben Adeyemi', [ids.ben])
     await arrived('ben', 'Hello, @Ben Adeyemi')
     expect(await inbox('cara')).toEqual([])
-  })
+  }, waits)
 })
 
 describe('a direct message', () => {
@@ -114,7 +116,7 @@ describe('a direct message', () => {
     expect(await told('ben', body, 'Sure')).toBe(false)
     await say('ana', { channel_id: general.id }, 'And you, @Dan Mwangi?', [ids.dan])
     expect(await told('dan', body, 'And you, @Dan Mwangi?')).toBe(false)
-  })
+  }, waits)
 })
 
 describe('do not disturb', () => {
@@ -128,5 +130,5 @@ describe('do not disturb', () => {
     const body = 'Are you around, @Ana Silva?'
     await say('ben', { channel_id: general.id }, body, [ids.ana])
     expect(await arrived('ana', body)).toMatchObject({ title: 'Ben Adeyemi mentioned you in #general' })
-  })
+  }, waits)
 })

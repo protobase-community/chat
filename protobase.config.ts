@@ -8,8 +8,15 @@ export default defineConfig({
     // `admin` is the superuser, in every workspace; `participant` is held per workspace, given with each invitation, and
     // `moderator` too, which a workspace's creator holds and gives to its admins: it deletes anyone's messages there.
     roles: { admin: 'Superuser', participant: 'Participant', moderator: 'Moderator' },
-    // A workspace is an organization: people join one by invitation and see only its channels and messages.
-    organizations: { create: 'everyone' },
+    // A workspace is an organization: people join one by invitation and see only its channels and messages. Someone in
+    // none names their first on one screen, then lands in its #general (the Channels entry's start record).
+    organizations: {
+      create: 'everyone',
+      names: { singular: 'Workspace', plural: 'Workspaces' },
+      createDescription:
+        'A workspace holds your team’s channels and direct messages. Next, you land in #general. To join an existing ' +
+        'workspace instead, ask someone in it to invite the email you signed in with.',
+    },
   },
   // No PostgREST-compatible API: it runs under the tables' row-level security, which these tables do not have, rather
   // than the resources' access rules, so a key set in the environment must not turn it on.

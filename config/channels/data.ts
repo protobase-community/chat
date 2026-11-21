@@ -17,6 +17,8 @@ export const channels = resource('channels')
     kind: f.enum(['public', 'private']).default('public').filterable().access({ update: () => false }),
     // A private channel's members, as user ids; the database adds its creator. Null for a public channel.
     member_ids: f.json().optional(),
+    // True on the workspace's #general, which the app opens at `/`; written only when the workspace starts.
+    is_default: f.boolean().readOnly().optional().filterable(),
     author_id: f.text().readOnly(),
     created_at: f.timestamp().readOnly().dbDefault(),
   })

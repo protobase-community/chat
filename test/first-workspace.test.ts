@@ -5,7 +5,8 @@ import postgres from 'postgres'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { root, startChat, throwawayDatabase } from './chat-server'
 
-// A workspace made as the app makes one, through sign-in's create call, against Postgres: it starts with #general.
+// A workspace made as the app makes one, through sign-in's create call, against Postgres: it starts with #general, the
+// record the app opens at `/`. Someone signed in with no workspace is shown the screen that creates one.
 
 let chat: Awaited<ReturnType<typeof startChat>>
 let database: Awaited<ReturnType<typeof throwawayDatabase>>
@@ -51,12 +52,44 @@ const createWorkspace = async (name: string, slug: string) => {
 }
 
 const channelsOf = (organizationId: string) =>
-  sql`select name, kind, topic, member_ids, author_id from public.channels where organization_id = ${organizationId}`
+  sql`select name, kind, topic, member_ids, author_id, is_default from public.channels where organization_id = ${organizationId}`
+
+/** The bearer headers of Finn's session, in the workspace it works in. */
+const finnsToken = async () => {
+  const answer = await fetch(`${chat.url}/api/auth/token`, { headers: { cookie, origin: chat.url } })
+  if (!answer.ok) throw new Error(`A token answered ${answer.status}`)
+  return { authorization: `Bearer ${((await answer.json()) as { token: string }).token}` }
+}
+
+/** The record `/` opens, as the app finds it: the first channel the Channels entry's start filter lists. */
+const startRecord = async () => {
+  const headers = await finnsToken()
+  const meta = (await (await fetch(`${chat.url}/api/meta`, { headers })).json()) as { views: { resource: string; nav?: { start?: { filter: string } } }[] }
+  const filter = meta.views.find((view) => view.resource === 'channels')!.nav!.start!.filter
+  const answer = await fetch(`${chat.url}/api/v1/channels?filter=${encodeURIComponent(filter)}`, { headers })
+  if (answer.status !== 200) throw new Error(await answer.text())
+  return ((await answer.json()) as { items: { id: number; name: string }[] }).items[0]
+}
+
+describe('someone signed in with no workspace', () => {
+  // The app sends whoever is in no organization to its create screen, /-/first-organization.
+  it('is in none, so the app shows them the screen that creates one', async () => {
+    const answer = await fetch(`${chat.url}/api/auth/organization/list`, { headers: { cookie, origin: chat.url } })
+    expect(answer.status).toBe(200)
+    expect(await answer.json()).toEqual([])
+  })
+})
 
 describe('a new workspace', () => {
-  it('starts with one public #general, its creator’s', async () => {
+  it('starts with one public #general, its creator’s, the channel it opens at', async () => {
     const id = await createWorkspace('Northwind', 'northwind')
-    expect(await channelsOf(id)).toEqual([{ name: 'general', kind: 'public', topic: null, member_ids: null, author_id: finnId }])
+    expect(await channelsOf(id)).toEqual([{ name: 'general', kind: 'public', topic: null, member_ids: null, author_id: finnId, is_default: true }])
+  })
+
+  it('opens its #general at /, the address creating it reloads at', async () => {
+    const [general] = await sql<{ id: number }[]>`
+      select c.id from public.channels c join auth.organization o on o.id = c.organization_id where o.slug = 'northwind'`
+    expect(await startRecord()).toMatchObject({ id: general!.id, name: 'general' })
   })
 
   it('gets a #general of its own beside another workspace’s', async () => {
