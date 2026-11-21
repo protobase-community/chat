@@ -13,7 +13,9 @@ export default defineConfig({
     organizations: {
       create: 'everyone',
       names: { singular: 'Workspace', plural: 'Workspaces' },
-      createDescription: 'A workspace holds your team’s channels and direct messages. Next, you land in #general.',
+      createDescription:
+        'A workspace holds your team’s channels and direct messages. Next, you land in #general. To join an existing ' +
+        'workspace instead, ask someone in it to invite the email you signed in with.',
     },
   },
   // No PostgREST-compatible API: it runs under the tables' row-level security, which these tables do not have, rather
