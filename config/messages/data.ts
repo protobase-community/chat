@@ -31,8 +31,9 @@ export const messages = resource('messages')
     author_id: f.text().readOnly().filterable(),
     // Null for a message of files alone; the database refuses a message with neither text nor files.
     body: f.text().min(1).max(10_000).optional(),
-    // The user ids of the people the message mentions, as the composer gives them: a JSON array, `[]` for none.
-    mentions: f.json().filterable(),
+    // The user ids of the people the message mentions, as the composer gives them: a JSON array, `[]` for none, as a
+    // message from the create form, which has no input for them, has.
+    mentions: f.json().default([]).filterable(),
     sent_at: f.timestamp().readOnly().dbDefault(),
     // When its author last changed its body or mentions, set by the database; null for a message never edited.
     edited_at: f.timestamp().readOnly().optional(),
