@@ -25,8 +25,9 @@ than in this app, belongs in [Protobase's issues](https://github.com/PrototeamHQ
 4. Check it with `bun run typecheck`, `bun run test`, `bun run build` and `bun run doctor`, as CI does.
 5. Open a pull request that says what changed and why.
 
-Keep each pull request to one change. Commit messages follow [Conventional Commits](https://www.conventionalcommits.org),
-such as `feat: filter the orders by status` or `fix: the seed's invoice totals`.
+Keep each pull request to one change, titled per [Conventional Commits](https://www.conventionalcommits.org), such as
+`feat: filter the orders by status` or `fix: the seed's invoice totals`. Pull requests are squash-merged under their
+title, so commits on the branch, merges of `main` included, need no particular message.
 
 ## Licence
 
