@@ -20,6 +20,10 @@ bun run seed                      # the demo workspace: three people, their chan
 bun run dev                       # http://localhost:5173
 ```
 
+To start from an empty app instead, skip the seed: sign in, and the chat asks you to name your workspace on one
+screen, **Create your workspace**, then opens its #general. Someone invited to a workspace sees the invitation there
+first, with **Join**. Each time you open the chat later, it opens your workspace's #general.
+
 The seed prints the passwords of the three demo people (`maya@example.com`, `sam@example.com` and
 `lena@example.com`), once, when it creates them: sign in as two of them in two browsers to chat. Maya and Sam share
 the private #launch and a direct message, which Lena and your own account do not see. Your own account
@@ -64,6 +68,7 @@ app on it with `protobase dev`.
 | Workspaces, joined by invitation, each seeing only its own channels | This version |
 | Channels with a name and a topic, open to the whole workspace | This version |
 | A new workspace starts with a #general channel, its creator's | This version |
+| Someone in no workspace names one in a single step and lands in its #general; the chat opens at #general | This version |
 | A conversation filling the page beside the sidebar: its messages scroll, the composer stays at the bottom, and a Details link opens its members, Edit and Delete | This version |
 | Messages with the author's name, avatar and time, one person's run of messages grouped | This version |
 | Day dividers: "Today", "Yesterday", the date | This version |
@@ -133,8 +138,6 @@ app on it with `protobase dev`.
 
 <gap>Someone who has the conversation open still gets a notification of its new messages because telling whether it is in front of them is not implemented.</gap>
 
-<gap>Someone signed in without a workspace cannot name one in a single step and land in its #general because Protobase's first-run step for organizations is not implemented.</gap> They see the Organizations page, which asks for a name and a slug, and open #general from the sidebar once it is made.
-
 ## How Protobase builds it
 
 - **Workspaces are organizations.** `auth.organizations` in `protobase.config.ts` turns on Protobase's
@@ -142,10 +145,15 @@ app on it with `protobase dev`.
   from its own **Members** and **Invitations** pages in the profile menu, and sign in with its own sign-in page. Give
   an invited person the **Participant** role, which `config/roles.ts` lets read and start channels and direct messages
   and post in them, or the **Moderator** role, which does all that and deletes anyone's messages there.
-  `create: 'everyone'` lets anyone signed in start a workspace of their own.
+  `create: 'everyone'` lets anyone signed in start a workspace of their own, on Protobase's
+  [first organization](https://docs.protobase.net/reference/auth/#first-organization-and-start-address) screen, which
+  `names` and `createDescription` word as a workspace.
 - **A new workspace starts with #general.** `onOrganizationCreated` in `auth/hooks.ts`, Protobase's
   [auth hooks](https://docs.protobase.net/reference/auth/), adds a public #general, its creator's, when a workspace is
-  created, by any route. A workspace made before it keeps the channels it has.
+  created, by any route, marked `is_default`. A workspace made before it keeps the channels it has.
+- **The chat opens at #general.** The Channels entry's `nav({ start: { filter: 'is_default = true' } })` in
+  `config/channels/ui.ts` makes `/` open that channel, found through an index as every filter is
+  ([sidebar](https://docs.protobase.net/reference/sidebar/#start-record)); creating or joining a workspace reloads at `/`.
 - **Each workspace sees only its own.** Channels, direct messages and messages declare `.tenant((r) => r.organization_id)`
   ([data config](https://docs.protobase.net/reference/data-config/#resource)): every read is limited to the workspace
   the session works in, and every create is stamped with it; no request may set it.
