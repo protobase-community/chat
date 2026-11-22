@@ -137,6 +137,8 @@ app on it with `protobase dev`.
 
 <gap>A conversation's page cannot be configured from Protobase's server-driven UI, so the chat draws it with its own components in `components/`, because a configured conversation's typing line without a realtime relay is not implemented.</gap>
 
+<gap>The page's presence and the sidebar's unread marks cannot come from Protobase's server-driven UI, so the chat tracks them with its own code in `components/`, because Protobase's presence and unread marks in pages work only over a realtime relay, which the chat does not run yet.</gap>
+
 ## How Protobase builds it
 
 - **Workspaces are organizations.** `auth.organizations` in `protobase.config.ts` turns on Protobase's
