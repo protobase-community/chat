@@ -135,7 +135,7 @@ app on it with `protobase dev`.
 
 <gap>Someone signed in without a workspace cannot name one in a single step and land in its #general because Protobase's first-run step for organizations is not implemented.</gap> They see the Organizations page, which asks for a name and a slug, and open #general from the sidebar once it is made.
 
-<gap>A conversation's page cannot be configured from Protobase's server-driven UI, so the chat draws it with its own components in `components/`, because a configured conversation with threads, reactions, edits, files, mentions, typing, presence and calls is not implemented.</gap>
+<gap>A conversation's page cannot be configured from Protobase's server-driven UI, so the chat draws it with its own components in `components/`, because a configured conversation's typing line without a realtime relay is not implemented.</gap>
 
 ## How Protobase builds it
 
