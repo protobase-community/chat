@@ -303,9 +303,9 @@ app on it with `protobase dev`.
 - **"New message" in the sidebar.** `create: { label: 'New message' }` in the `nav` of `config/direct_messages/ui.ts`
   puts a link to the create form under the sidebar's Direct messages entry, for whoever may start one
   ([create link](https://docs.protobase.net/reference/sidebar/#create-link)).
-- **Each reader's name for a direct message.** `.titleFrom('memberNames', (r) => [r.member_ids])` in
-  `config/direct_messages/ui.ts` titles a direct message by the `memberNames` rule of `protobase.ui.tsx`
-  (`components/member-names.ts`): the names of the other people in it, so Maya sees "Sam Okafor" and Sam "Maya Jansen",
+- **Each reader's name for a direct message.** `.titleFrom('members', (r) => [r.member_ids])` in
+  `config/direct_messages/ui.ts` titles a direct message by Protobase's built-in `members` rule: the names of the other
+  people in it, so Maya sees "Sam Okafor" and Sam "Maya Jansen",
   in the sidebar, the breadcrumb and the page's heading
   ([titles per reader](https://docs.protobase.net/reference/ui-config/#titles-per-reader)).
 - **Unread, counted as each reader.** `read_positions` (`config/read_positions/data.ts`) keeps how far each person has
