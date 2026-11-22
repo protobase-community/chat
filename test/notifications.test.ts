@@ -30,9 +30,11 @@ const inbox = async (who: Who) => {
   expect(answer.status).toBe(200)
   return ((await answer.json()) as { items: Notification[] }).items
 }
-/** `who`'s notification of the message `body`, once it arrives, within 10 seconds. */
+/** How long `arrived` waits for one notification. */
+const arrival = 10_000
+/** `who`'s notification of the message `body`, once it arrives, within `arrival`. */
 const arrived = async (who: Who, body: string) => {
-  const deadline = Date.now() + 10_000
+  const deadline = Date.now() + arrival
   while (Date.now() < deadline) {
     const found = (await inbox(who)).find((item) => item.body === body)
     if (found) return found
@@ -40,8 +42,8 @@ const arrived = async (who: Who, body: string) => {
   }
   throw new Error(`${who} got no notification of "${body}"`)
 }
-/** A test's time: each of its notifications may take `arrived`'s 10 seconds. */
-const waits = 30_000
+/** A test's time: it waits on up to three notifications in a row, each up to `arrival`, plus its requests. */
+const waits = 3 * arrival + 10_000
 /** Whether `who` was told of `body`, asked once a later message to them, `probe`, has reached them. */
 const told = async (who: Who, body: string, probe: string) => {
   await arrived(who, probe)
