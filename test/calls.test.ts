@@ -1,10 +1,10 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { callUrl } from '../config/conversations/call-address'
+import { callUrl, type CallResource } from '../config/conversations/call-address'
 import { upgradeStatus } from './call-upgrade'
 import { startChat, throwawayDatabase } from './chat-server'
 import { ana, ben, dan, makeWorkspaces } from './workspaces'
 
-// Who joins a conversation's call, as the running app decides it against Postgres: functions/call.ts admits only
+// Who joins a conversation's call, as the running app decides it against Postgres: the conversations' call functions admit only
 // someone who reads the conversation. Ana and Ben share a private channel and a direct message; Dan, in the same
 // workspace, is in neither.
 
@@ -21,7 +21,7 @@ const create = async (path: string, headers: Headers, body: unknown) => {
   if (answer.status !== 201) throw new Error(`A create answered ${answer.status}: ${await answer.text()}`)
   return answer.json()
 }
-const joinStatus = (resource: string, key: number | string, headers: Headers) => upgradeStatus(`${chat.url}${callUrl(resource, String(key))}`, headers)
+const joinStatus = (resource: CallResource, key: number | string, headers: Headers) => upgradeStatus(`${chat.url}${callUrl(resource, String(key))}`, headers)
 
 beforeAll(async () => {
   database = await throwawayDatabase()
@@ -55,8 +55,8 @@ describe("a conversation's call", () => {
     expect(await joinStatus('direct_messages', direct.id, people.dan)).toBe(404)
   })
 
-  it('refuses a resource without calls, and anyone not signed in', async () => {
-    expect(await joinStatus('messages', 1, people.ana)).toBe(404)
+  it('refuses an address without a conversation, and anyone not signed in', async () => {
+    expect(await upgradeStatus(`${chat.url}/api/functions/channel-call`, people.ana)).toBe(404)
     expect(await joinStatus('channels', plans.id, {})).toBe(401)
   })
 })

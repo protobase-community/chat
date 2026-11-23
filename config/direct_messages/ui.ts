@@ -1,9 +1,7 @@
-import { component } from '@protobase/layout'
 import { view } from '@protobase/schema'
+import { callFunctions } from '../conversations/call-address'
+import { messagesConversation } from '../messages/conversation'
 import type { directMessages } from './data'
-
-/** A direct message's chat, its whole record page, drawn by components/direct-message-chat.tsx. */
-const DirectMessageChat = component('DirectMessageChat')
 
 /**
  * The reader's direct messages, listed in the sidebar under "Direct messages", each named after the other people in it
@@ -21,4 +19,14 @@ export const directMessagesView = view<typeof directMessages>('direct_messages')
   // A conversation is started by its people, not imported from a spreadsheet.
   .import(false)
   .recordMode('read')
-  .record({ component: DirectMessageChat })
+  .record({
+    conversation: {
+      ...messagesConversation,
+      field: 'direct_message_id',
+      members: 'member_ids',
+      readPosition: { resource: 'read_positions', field: 'direct_message_id', message: 'last_read_id' },
+      call: callFunctions.direct_messages,
+      placeholder: 'Write a message',
+      empty: 'This is the start of your conversation.',
+    },
+  })

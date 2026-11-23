@@ -1,9 +1,7 @@
-import { component } from '@protobase/layout'
 import { l, view } from '@protobase/schema'
+import { callFunctions } from '../conversations/call-address'
+import { messagesConversation } from '../messages/conversation'
 import type { channels } from './data'
-
-/** A channel's chat, its whole record page, drawn by components/channel-chat.tsx. */
-const ChannelChat = component('ChannelChat')
 
 /**
  * The workspace's channels the reader may read, listed in the sidebar by name: a member opens one to chat in it, or
@@ -26,5 +24,15 @@ export const channelsView = view<typeof channels>('channels')
   .import(false)
   .export(false)
   .recordMode('read')
-  .record({ component: ChannelChat })
+  .record({
+    conversation: {
+      ...messagesConversation,
+      field: 'channel_id',
+      subtitle: 'topic',
+      readPosition: { resource: 'read_positions', field: 'channel_id', message: 'last_read_id' },
+      call: callFunctions.channels,
+      placeholder: 'Message the channel',
+      empty: 'This is the start of the channel.',
+    },
+  })
   .layout((r) => [l.section('Channel', [r.topic, r.kind]), l.section('Members', [r.member_ids], { when: 'kind = "private"' })])
