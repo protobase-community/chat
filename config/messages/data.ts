@@ -33,7 +33,7 @@ export const messages = resource('messages')
     body: f.text().min(1).max(10_000).optional(),
     // The user ids of the people the message mentions, as the composer gives them: a JSON array, `[]` for none.
     mentions: f.json().filterable(),
-    sent_at: f.timestamp().readOnly().dbDefault(),
+    sent_at: f.timestamp().readOnly().sortable().dbDefault(),
     // When its author last changed its body or mentions, set by the database; null for a message never edited.
     edited_at: f.timestamp().readOnly().optional(),
     // How many replies its thread has and when the last came, kept by the database; 0 and null for none.
