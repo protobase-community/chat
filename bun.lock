@@ -13,13 +13,13 @@
         "react": "^19.3.0",
       },
       "devDependencies": {
-        "@protobase/cli": "^0.125.0",
-        "@protobase/client": "^0.125.0",
-        "@protobase/config": "^0.125.0",
-        "@protobase/layout": "^0.125.0",
-        "@protobase/schema": "^0.125.0",
-        "@protobase/server": "^0.125.0",
-        "@protobase/ui": "^0.125.0",
+        "@protobase/cli": "^0.126.0",
+        "@protobase/client": "^0.126.0",
+        "@protobase/config": "^0.126.0",
+        "@protobase/layout": "^0.126.0",
+        "@protobase/schema": "^0.126.0",
+        "@protobase/server": "^0.126.0",
+        "@protobase/ui": "^0.126.0",
         "@types/node": "^22.20.5",
         "@types/pg": "^8.23.1",
         "@types/react": "^19.3.0",
@@ -275,25 +275,25 @@
 
     "@pgsql/types": ["@pgsql/types@18.0.0", "", {}, "sha512-jtAY4JU7jdVYZ/Vv3zlZqVP+FRWZokyCLKPPCnAApiaJAElpyyiMC3HRiquBu29kSrVs+rkqZD50SUIb/zyEGw=="],
 
-    "@protobase/cli": ["@protobase/cli@0.125.0", "", { "dependencies": { "@better-auth/core": "^1.7.12", "@hono/node-server": "^2.1.3", "@protobase/config": "0.125.0", "@protobase/layout": "0.125.0", "@protobase/query": "0.125.0", "@protobase/schema": "0.125.0", "@protobase/server": "0.125.0", "@protobase/ui": "0.125.0", "@protobase/workflows": "0.125.0", "@react-email/render": "^2.1.0", "@scalar/hono-api-reference": "^0.12.10", "@sentry/vite-plugin": "^11.10.0", "@tailwindcss/vite": "^4.3.3", "@vitejs/plugin-react": "^6.1.2", "aip-parsers": "^1.0.0", "better-auth": "^1.7.12", "commander": "^15.0.0", "diff": "^9.0.0", "hono": "^4.13.13", "jose": "^6.2.12", "kysely": "^0.29.6", "lightningcss": "^1.33.0", "pg": "^8.23.1", "postcss": "^8.5.29", "postgres": "^3.4.9", "react": "^19.3.0", "rolldown": "~1.2.11", "semver": "^7.8.5", "squawk-cli": "^2.73.0", "ts-morph": "^28.0.0", "vite": "^8.3.3", "ws": "^8.22.0", "zod": "^4.6.5" }, "bin": { "protobase": "bin/protobase.mjs" } }, "sha512-CswsuNFxmlE/QQByE8JXsElv/IF4xkDJU2fzBscGWFtqMLWggIFjIb9qLKQnTkwRDi9RjKvYui7rx7bHeQDmwg=="],
+    "@protobase/cli": ["@protobase/cli@0.126.0", "", { "dependencies": { "@better-auth/core": "^1.7.12", "@hono/node-server": "^2.1.3", "@protobase/config": "0.126.0", "@protobase/layout": "0.126.0", "@protobase/query": "0.126.0", "@protobase/schema": "0.126.0", "@protobase/server": "0.126.0", "@protobase/ui": "0.126.0", "@protobase/workflows": "0.126.0", "@react-email/render": "^2.1.0", "@scalar/hono-api-reference": "^0.12.10", "@sentry/vite-plugin": "^11.10.0", "@tailwindcss/vite": "^4.3.3", "@vitejs/plugin-react": "^6.1.2", "aip-parsers": "^1.0.0", "better-auth": "^1.7.12", "commander": "^15.0.0", "diff": "^9.0.0", "hono": "^4.13.13", "jose": "^6.2.12", "kysely": "^0.29.6", "lightningcss": "^1.33.0", "pg": "^8.23.1", "postcss": "^8.5.29", "postgres": "^3.4.9", "react": "^19.3.0", "rolldown": "~1.2.11", "semver": "^7.8.5", "squawk-cli": "^2.73.0", "ts-morph": "^28.0.0", "vite": "^8.3.3", "ws": "^8.22.0", "zod": "^4.6.5" }, "bin": { "protobase": "bin/protobase.mjs" } }, "sha512-dp1tEod4AceITxtvoeFKCCbYPuHnWUyQH6znYqJzAVf+S84a7CVqs13BqwT9uCHzU72uelfHvetrXGixDHz11Q=="],
 
-    "@protobase/client": ["@protobase/client@0.125.0", "", { "dependencies": { "@better-auth/passkey": "^1.7.12", "@protobase/layout": "0.125.0", "@protobase/schema": "0.125.0", "@simplewebauthn/browser": "^13.3.0", "better-auth": "^1.7.12" } }, "sha512-UmpfUw8EknJVulWFUxEeC1ExoPJEs3QPBXfYHdZcbJzSyGrXwfIAeWw1y3/r9v7KgKE5AIVmF5GCGdUtnkzHMg=="],
+    "@protobase/client": ["@protobase/client@0.126.0", "", { "dependencies": { "@better-auth/passkey": "^1.7.12", "@protobase/layout": "0.126.0", "@protobase/schema": "0.126.0", "@simplewebauthn/browser": "^13.3.0", "better-auth": "^1.7.12" } }, "sha512-pzeeLR6WvfoiN4B1DGBJKdc+7jlHqB1sPei9X67fIc1Y8qsuC0gqIJCrYr8bXntP2Lz2oHfHXf5Vosjj8wyESw=="],
 
-    "@protobase/config": ["@protobase/config@0.125.0", "", { "peerDependencies": { "@protobase/server": "0.125.0" } }, "sha512-qHZPYJPoSQUXscKEUiSo8GDCCgVkr77cLRCm2cHEwqplah8ZsqMYeibu7fNGyJDB2dSBMaiIA+XqkU+vd6Rc0w=="],
+    "@protobase/config": ["@protobase/config@0.126.0", "", { "peerDependencies": { "@protobase/server": "0.126.0" } }, "sha512-msDRffFxpq/I5dZq5nNFAZq1olRlQwAPJYDT3TfFoITaFdchqJF1jaG8BB5gltrlNTP74inEYlmFu/+jQ6b50w=="],
 
-    "@protobase/layout": ["@protobase/layout@0.125.0", "", { "dependencies": { "@protobase/schema": "0.125.0", "aip-parsers": "^1.0.0", "fastest-levenshtein": "^1.0.16", "intl-messageformat": "^12.1.4" } }, "sha512-3/wQwySccNGYnsZ3NMFexLWfMtnaIHb/KDxFratD+Pim3WuLrrcPSR+Aw3EmiX2p07XvB/RsblVSukDofGVM1A=="],
+    "@protobase/layout": ["@protobase/layout@0.126.0", "", { "dependencies": { "@protobase/schema": "0.126.0", "aip-parsers": "^1.0.0", "fastest-levenshtein": "^1.0.16", "intl-messageformat": "^12.1.4" } }, "sha512-OwqRxyXWIPeG+rK2YYQbG6J8HIFOI8KzT3P4nTjX/iEOnD9fzHZzLf1P2KGDjMVANj/yQvM3rbiecpspwI3UOg=="],
 
-    "@protobase/query": ["@protobase/query@0.125.0", "", { "dependencies": { "@protobase/schema": "0.125.0", "kysely": "^0.29.6" } }, "sha512-0xrdX07M4fWDuBsxvW6+S/2DgTmgpK41UKYG/EMMf9sZ1gA+VuiTYAmPnQDpDcVUzi5DmgMuDRgKM+75AvISzQ=="],
+    "@protobase/query": ["@protobase/query@0.126.0", "", { "dependencies": { "@protobase/schema": "0.126.0", "kysely": "^0.29.6" } }, "sha512-os4F5sWPaE35J+Qv2AbepCXmY20pomp1U8shb6nt6lJDJP9NgHMXT6A3r99aNBR5d8gOk4GOQf1+o7gxpKxmtg=="],
 
-    "@protobase/schema": ["@protobase/schema@0.125.0", "", { "dependencies": { "aip-parsers": "^1.0.0", "eventsource-parser": "^4.1.3", "kysely": "^0.29.6", "semver": "^7.8.5", "zod": "^4.6.5" } }, "sha512-PykmOq9/JBCx+2SY+ADLZmQ/ECxlYaTkqn71N/IPx4f+iLdiYEFGycYvLL4um7Y81XhBgvtuHWPei9UyuMv5+A=="],
+    "@protobase/schema": ["@protobase/schema@0.126.0", "", { "dependencies": { "aip-parsers": "^1.0.0", "eventsource-parser": "^4.1.3", "kysely": "^0.29.6", "semver": "^7.8.5", "zod": "^4.6.5" } }, "sha512-C4Sarl/1iPxk/fWb+S9d0LwMoqWkoRpatYzcSB3eFwDgHgjOEqG/iq0CeWOm5nbd14LvM6hRnQcBw0zwnMo7NQ=="],
 
-    "@protobase/server": ["@protobase/server@0.125.0", "", { "dependencies": { "@better-auth/cimd": "^1.7.12", "@better-auth/core": "^1.7.12", "@better-auth/mcp": "^1.7.12", "@better-auth/oauth-provider": "^1.7.12", "@better-auth/passkey": "^1.7.12", "@better-auth/sso": "^1.7.12", "@livekit/protocol": "1.53.1", "@modelcontextprotocol/server": "^2.3.1", "@protobase/layout": "0.125.0", "@protobase/query": "0.125.0", "@protobase/schema": "0.125.0", "@protobase/workflow-plugins": "0.125.0", "@protobase/workflows": "0.125.0", "@react-email/render": "^2.1.0", "@react-pdf/primitives": "^4.4.0", "@react-pdf/renderer": "^4.9.0", "@scalar/hono-api-reference": "^0.12.10", "@sentry/core": "^11.7.0", "@simplewebauthn/server": "^13.3.1", "altcha-lib": "^2.6.0", "bcryptjs": "^3.0.3", "better-auth": "^1.7.12", "better-call": "1.4.4", "cron-parser": "^5.10.1", "file-type": "^22.1.1", "hono": "^4.13.13", "image-size": "^2.0.4", "intl-messageformat": "^12.1.4", "jose": "^6.2.12", "kysely": "^0.29.6", "libpg-query": "^18.2.2", "nodemailer": "^10.0.16", "pg-boss": "12.37.1", "react": "^19.3.0", "react-dom": "^19.3.0", "react-email": "^6.11.1", "semver": "^7.8.5", "thumbhash": "^0.1.1", "zod": "^4.6.5" }, "peerDependencies": { "sharp": "^0.35.5" }, "optionalPeers": ["sharp"] }, "sha512-MH7f+HJyDKyePVPo9evzciy8eF2lM3o2aAHtF2m+WTFLGL8jbJotWSPQBG/zTu0Wklw0tzss7Lmlwb1XhxY77g=="],
+    "@protobase/server": ["@protobase/server@0.126.0", "", { "dependencies": { "@better-auth/cimd": "^1.7.12", "@better-auth/core": "^1.7.12", "@better-auth/mcp": "^1.7.12", "@better-auth/oauth-provider": "^1.7.12", "@better-auth/passkey": "^1.7.12", "@better-auth/sso": "^1.7.12", "@livekit/protocol": "1.53.1", "@modelcontextprotocol/server": "^2.3.1", "@protobase/layout": "0.126.0", "@protobase/query": "0.126.0", "@protobase/schema": "0.126.0", "@protobase/workflow-plugins": "0.126.0", "@protobase/workflows": "0.126.0", "@react-email/render": "^2.1.0", "@react-pdf/primitives": "^4.4.0", "@react-pdf/renderer": "^4.9.0", "@scalar/hono-api-reference": "^0.12.10", "@sentry/core": "^11.7.0", "@simplewebauthn/server": "^13.3.1", "altcha-lib": "^2.6.0", "bcryptjs": "^3.0.3", "better-auth": "^1.7.12", "better-call": "1.4.4", "cron-parser": "^5.10.1", "file-type": "^22.1.1", "hono": "^4.13.13", "image-size": "^2.0.4", "intl-messageformat": "^12.1.4", "jose": "^6.2.12", "kysely": "^0.29.6", "libpg-query": "^18.2.2", "nodemailer": "^10.0.16", "pg-boss": "12.37.1", "react": "^19.3.0", "react-dom": "^19.3.0", "react-email": "^6.11.1", "semver": "^7.8.5", "thumbhash": "^0.1.1", "zod": "^4.6.5" }, "peerDependencies": { "sharp": "^0.35.5" }, "optionalPeers": ["sharp"] }, "sha512-ZrgQw5j+v8b6mO/fAo3FIVORKSz9OxhwLWJiAh2BjxhrTTytfmtReFidoGT2p9wTmL+eeXFPzguPr9AH22LHWw=="],
 
-    "@protobase/ui": ["@protobase/ui@0.125.0", "", { "dependencies": { "@dnd-kit/core": "^6.3.1", "@dnd-kit/sortable": "^10.0.0", "@protobase/client": "0.125.0", "@protobase/layout": "0.125.0", "@protobase/schema": "0.125.0", "@protobase/workflows": "0.125.0", "@sentry/browser": "^11.7.0", "@tanstack/react-query": "^5.104.1", "@tanstack/react-table": "^9.2.6", "@xyflow/react": "^12.12.1", "altcha-lib": "^2.6.0", "dompurify": "^3.4.17", "elkjs": "0.12.1", "fflate": "^0.8.3", "intl-messageformat": "^12.1.4", "lucide-react": "^1.52.0", "maplibre-gl": "^6.14.0", "marked": "^18.1.1", "papaparse": "^5.7.0", "pmtiles": "^4.5.0", "react": "^19.3.0", "react-dom": "^19.3.0", "react-map-gl": "^8.1.3", "recharts": "^3.10.1", "tailwindcss": "^4.3.3", "thumbhash": "^0.1.1", "uqr": "^0.1.3" } }, "sha512-917DGCrnIRHJCF3cTDwVMaPDfTb1r5V2IMenEq5578WSMhgl5zRR+wA6z9WZCtIRXTkYNcxXP5pF/xcyjC7O3Q=="],
+    "@protobase/ui": ["@protobase/ui@0.126.0", "", { "dependencies": { "@dnd-kit/core": "^6.3.1", "@dnd-kit/sortable": "^10.0.0", "@protobase/client": "0.126.0", "@protobase/layout": "0.126.0", "@protobase/schema": "0.126.0", "@protobase/workflows": "0.126.0", "@sentry/browser": "^11.7.0", "@tanstack/react-query": "^5.104.1", "@tanstack/react-table": "^9.2.6", "@xyflow/react": "^12.12.1", "altcha-lib": "^2.6.0", "dompurify": "^3.4.17", "elkjs": "0.12.1", "fflate": "^0.8.3", "intl-messageformat": "^12.1.4", "lucide-react": "^1.52.0", "maplibre-gl": "^6.14.0", "marked": "^18.1.1", "papaparse": "^5.7.0", "pmtiles": "^4.5.0", "react": "^19.3.0", "react-dom": "^19.3.0", "react-map-gl": "^8.1.3", "recharts": "^3.10.1", "tailwindcss": "^4.3.3", "thumbhash": "^0.1.1", "uqr": "^0.1.3" } }, "sha512-0LVUQHYBW82To10PzkWmyihKBQjoveQXQwTKiuQri05l6rhaVVqnS8IlvCIVlViXbNK8zRUoDURtkLVVThTtBw=="],
 
-    "@protobase/workflow-plugins": ["@protobase/workflow-plugins@0.125.0", "", { "dependencies": { "@protobase/workflows": "0.125.0", "postal-mime": "^4.2.0" } }, "sha512-wdblY738/05BR8OEAjFWTnj9lOrwdriAvXa2AOjwgbW4NT4Qsia6lEGrB2OS6Aq+3tpkOB8I//PfXyedaiRuHQ=="],
+    "@protobase/workflow-plugins": ["@protobase/workflow-plugins@0.126.0", "", { "dependencies": { "@protobase/workflows": "0.126.0", "postal-mime": "^4.2.0" } }, "sha512-yN7zMJjx/j2fNiX5iHYN6H5sxjat0BHYb2lOjv5ZHAsYsALXf0/k5leFaA1b0vu4toBmRA4ogqtjZI797dSM2g=="],
 
-    "@protobase/workflows": ["@protobase/workflows@0.125.0", "", { "dependencies": { "ajv": "^8.20.0", "jsonata": "^2.2.2" } }, "sha512-wjowlt9soWsdFt6oBtvFJ91lj62dnteys7ajdvURF/SwYI0XQAb2cHCa0Nacl0zB0QkHi/6RURN7uxsyBWzBEQ=="],
+    "@protobase/workflows": ["@protobase/workflows@0.126.0", "", { "dependencies": { "ajv": "^8.20.0", "jsonata": "^2.2.2" } }, "sha512-tA9eLUDfteafgIsVBL4yaWobY5AL4aMW0nyH2ytTdMV0w8mnVu45GSHkZr6In9xLBGmRPq0whluKOtdVRxjc0w=="],
 
     "@react-email/render": ["@react-email/render@2.3.1", "", { "dependencies": { "entities": "^4.5.0", "html-to-text": "^10.0.1", "html5parser": "^3.0.0", "prettier": "^3.5.3" }, "peerDependencies": { "react": "^18.0 || ^19.0 || ^19.0.0-rc", "react-dom": "^18.0 || ^19.0 || ^19.0.0-rc" } }, "sha512-suLxph30AiKy40PPSLQvpZIoQAz5wZ9Vucj+3XlAS1GWWa//TAqysqaa7rorKWNw18I7UxqvjCOj/TFPJeF6nA=="],
 
@@ -449,9 +449,9 @@
 
     "@tailwindcss/vite": ["@tailwindcss/vite@4.3.5", "", { "dependencies": { "@tailwindcss/node": "4.3.5", "@tailwindcss/oxide": "4.3.5", "tailwindcss": "4.3.5" }, "peerDependencies": { "vite": "^5.2.0 || ^6 || ^7 || ^8" } }, "sha512-BCNiY0a1ZjdOHVqw7kyb7U72BwfMF3dfUuN+tQsLWky/J5JOI/r7abibglXfygrZhVO/3u3V+E25kkKTeMkXaQ=="],
 
-    "@tanstack/query-core": ["@tanstack/query-core@5.108.3", "", {}, "sha512-Lh8fyLDlHOdZXfUB+G1M5bKxfQ1Y0/mfydFP+pMjFKweAU4OUiC4MyIBTcW7Ck+Iwt6K3/pzvADrJi2Dc1lwuQ=="],
+    "@tanstack/query-core": ["@tanstack/query-core@5.108.4", "", {}, "sha512-2Ks5dlLWz4eXJrthOyG0qW3SLt3xx0RrQmAmN0rnmogiaaOYuWiAe6HAm9KE2b2v8nig+vraNz8fsfZ6fF6zFg=="],
 
-    "@tanstack/react-query": ["@tanstack/react-query@5.108.3", "", { "dependencies": { "@tanstack/query-core": "5.108.3" }, "peerDependencies": { "@types/react": "^18 || ^19", "react": "^18 || ^19" }, "optionalPeers": ["@types/react"] }, "sha512-dd9eDuqr6hvoTycO+wwuIgdA10S9gRA5EYsJCByhiATp/Xy0D51XgJUCRYJONgKs3URKApbBfNl8mgAe5wI0+Q=="],
+    "@tanstack/react-query": ["@tanstack/react-query@5.108.4", "", { "dependencies": { "@tanstack/query-core": "5.108.4" }, "peerDependencies": { "@types/react": "^18 || ^19", "react": "^18 || ^19" }, "optionalPeers": ["@types/react"] }, "sha512-GlTa94kfEKTVsbzXe58rFA3GZ0ZE7N1aFtbZAfOS3XxMv8YNn4C+8rsz40LorHLazdm5PsqCroWaYAR+ZkMXMQ=="],
 
     "@tanstack/react-store": ["@tanstack/react-store@0.11.4", "", { "dependencies": { "@tanstack/store": "0.11.3", "use-sync-external-store": "^1.6.0" }, "peerDependencies": { "@types/react": "*", "react": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0", "react-dom": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0" }, "optionalPeers": ["@types/react"] }, "sha512-JAQz7LcABVRbxZ6qCd4u/KqDaqBc1qmcOWz7XBTdav1Ib363HQdihCQF1A755nDhoi9VEd6UqZ5thWVKTwIIXw=="],
 
@@ -1075,7 +1075,7 @@
 
     "tiny-invariant": ["tiny-invariant@1.3.3", "", {}, "sha512-+FbBPE1o9QAYvviau/qC5SE3caw21q3xkvWKBtja5vgqOWIHHJ3ioaq1VPfn/Szqctz2bU/oYeKd9/z5BL+PVg=="],
 
-    "tinybench": ["tinybench@6.2.4", "", {}, "sha512-SQ52jEncXxbMCzJuY2A/jGIbbAu6NYsBWW7grz2pNE+EnzQdoGaoBfpk4qC/opE7qiUcGmGgaGIz5EoHdS1O9w=="],
+    "tinybench": ["tinybench@6.2.5", "", {}, "sha512-b/8GRMdnY4cqkfCLyaFpTGIv1qwfi3oT0mWaepwT++6Z/ZrYehNfZZ2JDKVLKGhNoEkS3IIB1ELtCT0XS5DtOA=="],
 
     "tinyexec": ["tinyexec@1.3.1", "", {}, "sha512-GCvB3aoys96IuDFBMcTB46JOR6mdMtAToqwiW8JlWhsoh1mhHi/xn9ss/Dg7N555GiJyEt2qzoG/NHCwM6h1EA=="],
 
