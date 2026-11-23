@@ -1,11 +1,11 @@
 {
   "format": 1,
-  "protobaseVersion": "0.125.0",
+  "protobaseVersion": "0.126.2",
   "endsAt": {
-    "file": "033_auth.sql",
-    "id": "9ce6ba60-9444-44bf-a3d0-e353bc1ca21b"
+    "file": "034_auth.sql",
+    "id": "6b99e1f0-4372-40fc-8a25-53d15087acb4"
   },
-  "modelHash": "4ed80b5ff50789cd8f16b40f2b0dc8a9dcad7a8b0c3c0f8d0359d47e62e1502b",
+  "modelHash": "da808f76328d79e04d0bf6e8e1c2c7787a0a6fed73e5b219c0637f2b00587eed",
   "model": {
     "auth": {
       "schema": "auth",
@@ -462,7 +462,7 @@
           }
         },
         "mail_senders": {
-          "lastStep": 4,
+          "lastStep": 5,
           "tables": {
             "mail_sender": {
               "name": "mail_sender",
@@ -472,6 +472,7 @@
                 "address": "address",
                 "name": "name",
                 "shared": "shared",
+                "shared_at": "shared_at",
                 "signature": "signature",
                 "is_default": "is_default",
                 "created_at": "created_at",
@@ -487,7 +488,8 @@
                 "mail_sender_default_idx": "mail_sender_default_idx",
                 "mail_sender_shared_idx": "mail_sender_shared_idx",
                 "mail_sender_connection_address_uidx": "mail_sender_connection_address_uidx",
-                "mail_sender_user_address_idx": "mail_sender_user_address_idx"
+                "mail_sender_user_address_idx": "mail_sender_user_address_idx",
+                "mail_sender_shared_at_idx": "mail_sender_shared_at_idx"
               }
             },
             "mail_sender_verification": {
@@ -624,11 +626,13 @@
       "auth.mail_sender.provider_state_read_at",
       "auth.mail_sender.removed_at",
       "auth.mail_sender.shared",
+      "auth.mail_sender.shared_at",
       "auth.mail_sender.signature",
       "auth.mail_sender.typed_at",
       "auth.mail_sender.user_id",
       "auth.mail_sender_connection_address_uidx",
       "auth.mail_sender_default_idx",
+      "auth.mail_sender_shared_at_idx",
       "auth.mail_sender_shared_idx",
       "auth.mail_sender_user_address_idx",
       "auth.mail_sender_verification",
