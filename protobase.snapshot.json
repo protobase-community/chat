@@ -1,11 +1,11 @@
 {
   "format": 1,
-  "protobaseVersion": "0.124.0",
+  "protobaseVersion": "0.125.0",
   "endsAt": {
-    "file": "032_auth.sql",
-    "id": "68083967-d4e3-406a-a095-ff12f7660568"
+    "file": "033_auth.sql",
+    "id": "9ce6ba60-9444-44bf-a3d0-e353bc1ca21b"
   },
-  "modelHash": "e2ecbe06662e15e37dc209d81d58eb233c3a13121e972879f3800c1facbdef1f",
+  "modelHash": "4ed80b5ff50789cd8f16b40f2b0dc8a9dcad7a8b0c3c0f8d0359d47e62e1502b",
   "model": {
     "auth": {
       "schema": "auth",
@@ -462,7 +462,7 @@
           }
         },
         "mail_senders": {
-          "lastStep": 3,
+          "lastStep": 4,
           "tables": {
             "mail_sender": {
               "name": "mail_sender",
@@ -488,6 +488,30 @@
                 "mail_sender_shared_idx": "mail_sender_shared_idx",
                 "mail_sender_connection_address_uidx": "mail_sender_connection_address_uidx",
                 "mail_sender_user_address_idx": "mail_sender_user_address_idx"
+              }
+            },
+            "mail_sender_verification": {
+              "name": "mail_sender_verification",
+              "scope": "global",
+              "columns": {
+                "sender_id": "sender_id",
+                "verifier": "verifier",
+                "state": "state",
+                "secret_hash": "secret_hash",
+                "created_at": "created_at",
+                "expires_at": "expires_at",
+                "next_check_at": "next_check_at",
+                "settled_at": "settled_at",
+                "valid_until": "valid_until",
+                "error_code": "error_code",
+                "error": "error"
+              },
+              "indexes": {
+                "mail_sender_verification_pending_uidx": "mail_sender_verification_pending_uidx",
+                "mail_sender_verification_secret_uidx": "mail_sender_verification_secret_uidx",
+                "mail_sender_verification_due_idx": "mail_sender_verification_due_idx",
+                "mail_sender_verification_expiry_idx": "mail_sender_verification_expiry_idx",
+                "mail_sender_verification_sender_idx": "mail_sender_verification_sender_idx"
               }
             }
           }
@@ -607,6 +631,24 @@
       "auth.mail_sender_default_idx",
       "auth.mail_sender_shared_idx",
       "auth.mail_sender_user_address_idx",
+      "auth.mail_sender_verification",
+      "auth.mail_sender_verification.created_at",
+      "auth.mail_sender_verification.error",
+      "auth.mail_sender_verification.error_code",
+      "auth.mail_sender_verification.expires_at",
+      "auth.mail_sender_verification.id",
+      "auth.mail_sender_verification.next_check_at",
+      "auth.mail_sender_verification.secret_hash",
+      "auth.mail_sender_verification.sender_id",
+      "auth.mail_sender_verification.settled_at",
+      "auth.mail_sender_verification.state",
+      "auth.mail_sender_verification.valid_until",
+      "auth.mail_sender_verification.verifier",
+      "auth.mail_sender_verification_due_idx",
+      "auth.mail_sender_verification_expiry_idx",
+      "auth.mail_sender_verification_pending_uidx",
+      "auth.mail_sender_verification_secret_uidx",
+      "auth.mail_sender_verification_sender_idx",
       "auth.member",
       "auth.member.app_roles",
       "auth.member.created_at",
