@@ -124,8 +124,6 @@ app on it with `protobase dev`.
 
 <gap>A channel's message box cannot say the channel's name, such as "Message #general", because a conversation's placeholder from the record's fields is not implemented.</gap> It says "Message the channel".
 
-<gap>Opening a conversation cannot keep its messages in place while they load because markdown that renders without moving the messages is not implemented in Protobase.</gap>
-
 <gap>The message box cannot show that it takes the files dragged over it because a drop highlight in Protobase's `Composer` is not implemented.</gap> Dropping them on it still adds them.
 
 <gap>A file pasted outside the message box cannot be shared because taking pasted files anywhere else on the conversation's page is not implemented.</gap> Click into the box, then paste.
