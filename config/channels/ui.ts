@@ -31,8 +31,8 @@ export const channelsView = view<typeof channels>('channels')
       subtitle: 'topic',
       readPosition: { resource: 'read_positions', field: 'channel_id', message: 'last_read_id' },
       call: callFunctions.channels,
-      placeholder: 'Message the channel',
-      empty: 'This is the start of the channel.',
+      placeholder: 'Message #{{name}}',
+      empty: 'This is the start of #{{name}}.',
     },
   })
   .layout((r) => [l.section('Channel', [r.topic, r.kind]), l.section('Members', [r.member_ids], { when: 'kind = "private"' })])

@@ -122,8 +122,6 @@ app on it with `protobase dev`.
 
 <gap>On a touch screen, part of a message's text cannot be selected because a Select text action is not implemented.</gap> Copy text in its actions copies the whole message.
 
-<gap>A channel's message box cannot say the channel's name, such as "Message #general", because a conversation's placeholder from the record's fields is not implemented in a Protobase release yet.</gap> It says "Message the channel".
-
 <gap>The message box cannot show that it takes the files dragged over it because a drop highlight in Protobase's `Composer` is not implemented.</gap> Dropping them on it still adds them.
 
 <gap>A file pasted outside the message box cannot be shared because taking pasted files anywhere else on the conversation's page is not implemented.</gap> Click into the box, then paste.
@@ -364,7 +362,7 @@ GitHub repository**. Protobase keeps the app in sync with the repository and dep
 `config/<name>/data.ts` and its screens in `config/<name>/ui.ts`, all exported from `config/index.ts`, and
 `protobase dev` and `protobase serve` serve the API and the app from them.
 
-- Tested with Protobase **0.132.2**, and CI runs against it. The app is bundled: the `@protobase/*` packages are dev
+- Tested with Protobase **0.132.3**, and CI runs against it. The app is bundled: the `@protobase/*` packages are dev
   dependencies in the tilde range of that release, and dev, the build and the `db:*` scripts (`protobase run`) use the
   CLI's own copies, so a newer CLI within the range updates the app with no change to its files. `tsconfig.json`
   extends the `.protobase/tsconfig.json` that `protobase types` writes, so the editor types the CLI's copies too. To
