@@ -10,15 +10,11 @@ team chat's channels and messages.
   after `009_changes.sql`). Never edit or remove a migration that exists: it has already run on the live database.
 - Expand only, where possible: add tables, columns and indexes, and keep what the running app still reads. Rename or
   drop only when asked to, once nothing uses it.
-- A migration Protobase writes on an update, with `protobase migration` or `protobase auth migration`, is committed as
-  written, the `auth` schema's changes and the drops of Protobase's own records included: Protobase owns those objects
-  and orders their changes, and marks with `protobase:breaks-older-code` one the version before cannot restart on.
 
 ## Never touch
 
-- Sign-in, accounts and the `auth` schema, by hand: only the migrations Protobase writes change it. `auth/hooks.ts`
-  holds only the app's hooks on sign-in's events, which write the app's own tables, such as the #general a new
-  workspace starts with.
+- Sign-in, accounts and the `auth` schema. `auth/hooks.ts` holds only the app's hooks on sign-in's events, which write
+  the app's own tables, such as the #general a new workspace starts with.
 - `.github/workflows/`.
 
 ## Scripts
