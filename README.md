@@ -122,7 +122,7 @@ app on it with `protobase dev`.
 
 <gap>On a touch screen, part of a message's text cannot be selected because a Select text action is not implemented.</gap> Copy text in its actions copies the whole message.
 
-<gap>A channel's message box cannot say the channel's name, such as "Message #general", because a conversation's placeholder from the record's fields is not implemented.</gap> It says "Message the channel".
+<gap>A channel's message box cannot say the channel's name, such as "Message #general", because a conversation's placeholder from the record's fields is not implemented in a Protobase release yet.</gap> It says "Message the channel".
 
 <gap>The message box cannot show that it takes the files dragged over it because a drop highlight in Protobase's `Composer` is not implemented.</gap> Dropping them on it still adds them.
 
