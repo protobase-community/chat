@@ -136,8 +136,6 @@ app on it with `protobase dev`.
 
 <gap>Someone signed in without a workspace cannot name one in a single step and land in its #general because Protobase's first-run step for organizations is not implemented.</gap> They see the Organizations page, which asks for a name and a slug, and open #general from the sidebar once it is made.
 
-<gap>A fresh install's first account cannot start outside the default workspace, an empty "Main" without #general, because keeping Protobase's default organization, which `auth.organizations.default` in `protobase.config.ts` names, from the first account is not implemented.</gap> They make their own workspace, or run the seed, and switch to it in the profile menu. A store with accounts before the update leaves that workspace without members.
-
 <gap>The page's presence and the sidebar's unread marks cannot come from Protobase's server-driven UI, so the chat tracks them with its own code in `components/`, because Protobase's presence and unread marks in pages work only over a realtime relay, which the chat does not run yet.</gap>
 
 ## How Protobase builds it
@@ -362,7 +360,7 @@ GitHub repository**. Protobase keeps the app in sync with the repository and dep
 `config/<name>/data.ts` and its screens in `config/<name>/ui.ts`, all exported from `config/index.ts`, and
 `protobase dev` and `protobase serve` serve the API and the app from them.
 
-- Tested with Protobase **0.132.3**, and CI runs against it. The app is bundled: the `@protobase/*` packages are dev
+- Tested with Protobase **0.133.0**, and CI runs against it. The app is bundled: the `@protobase/*` packages are dev
   dependencies in the tilde range of that release, and dev, the build and the `db:*` scripts (`protobase run`) use the
   CLI's own copies, so a newer CLI within the range updates the app with no change to its files. `tsconfig.json`
   extends the `.protobase/tsconfig.json` that `protobase types` writes, so the editor types the CLI's copies too. To

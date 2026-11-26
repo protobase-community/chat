@@ -42,8 +42,8 @@ describe('the demo seed', () => {
     const created = await seedDemoWorkspace(auth, sql, new Date())
     expect(created.map((person) => person.email)).toEqual(Object.values(people).map((person) => person.email))
     const first = await counts()
-    // The demo workspace, beside the default organization the config names, which the developer owns as the first user.
-    expect(first).toEqual({ users: 4, workspaces: ['demo', 'main'], members: 5, channels: 3, direct_messages: 1, messages: messages.length })
+    // The demo workspace, beside the default organization the config names, which has no members.
+    expect(first).toEqual({ users: 4, workspaces: ['demo', 'main'], members: 4, channels: 3, direct_messages: 1, messages: messages.length })
 
     expect(await seedDemoWorkspace(auth, sql, new Date())).toEqual([])
     expect(await counts()).toEqual(first)

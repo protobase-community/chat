@@ -46,8 +46,8 @@ export const makeWorkspaces = async (databaseUrl: string, appUrl: string) => {
   const general = { northwind: rows.find((row) => row.slug === 'northwind')!.id, southwind: rows.find((row) => row.slug === 'southwind')!.id }
 
   /**
-   * Signs `who` in with their password, as the sign-in page does, works in their workspace, as its switcher does, since
-   * the superuser also owns the config's default organization, and answers the headers of their API requests.
+   * Signs `who` in with their password, as the sign-in page does, works in their workspace, as its switcher does, and
+   * answers the headers of their API requests.
    */
   const as = async (who: typeof ana) => {
     const signIn = await fetch(`${appUrl}/api/auth/sign-in/email`, {
