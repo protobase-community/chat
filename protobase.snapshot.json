@@ -1,11 +1,11 @@
 {
   "format": 1,
-  "protobaseVersion": "0.132.2",
+  "protobaseVersion": "0.133.0",
   "endsAt": {
-    "file": "031_auth_jobs_relay.sql",
-    "id": "d96967fc-c7d6-42f2-8a4a-c0bf99fb7c5f"
+    "file": "032_relay.sql",
+    "id": "f0afe744-0b10-4ddc-8d18-203f77f050d8"
   },
-  "modelHash": "8d871a5c1b47ab26ce97772968511e681751181c5a3e9effe1195040036c8382",
+  "modelHash": "ddab81eb5cdfff00a7bd00135c344ba1bc2b4fd79251cf75432764aff91249b5",
   "model": {
     "auth": {
       "schema": "auth",
@@ -399,17 +399,6 @@
         },
         "names": {
           "sessions": "\"auth\".\"session\""
-        },
-        "resources": {
-          "members": {
-            "direct_messages": {
-              "version": 1,
-              "digest": "ecf99936e4823afe",
-              "table": {
-                "name": "direct_messages"
-              }
-            }
-          }
         }
       }
     }
