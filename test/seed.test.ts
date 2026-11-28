@@ -24,7 +24,7 @@ afterAll(async () => {
 
 const counts = async () => {
   const [row] = await sql`
-    select (select count(*)::int from auth."user") as users, (select count(*)::int from auth.organization) as workspaces,
+    select (select count(*)::int from auth."user") as users, array(select slug from auth.organization order by slug) as workspaces,
       (select count(*)::int from auth.member) as members, (select count(*)::int from public.channels) as channels,
       (select count(*)::int from public.direct_messages) as direct_messages, (select count(*)::int from public.messages) as messages`
   return row
@@ -42,7 +42,8 @@ describe('the demo seed', () => {
     const created = await seedDemoWorkspace(auth, sql, new Date())
     expect(created.map((person) => person.email)).toEqual(Object.values(people).map((person) => person.email))
     const first = await counts()
-    expect(first).toEqual({ users: 4, workspaces: 1, members: 4, channels: 3, direct_messages: 1, messages: messages.length })
+    // The demo workspace, beside the default organization the config names, which has no members.
+    expect(first).toEqual({ users: 4, workspaces: ['demo', 'main'], members: 4, channels: 3, direct_messages: 1, messages: messages.length })
 
     expect(await seedDemoWorkspace(auth, sql, new Date())).toEqual([])
     expect(await counts()).toEqual(first)
@@ -50,7 +51,8 @@ describe('the demo seed', () => {
 
   it('makes the developer the workspace’s admin and moderator, so their own account sees the members and moderates', async () => {
     const [row] = await sql`
-      select m.role, m.app_roles from auth.member m join auth."user" u on u.id = m.user_id where u.email = 'dev@example.com'`
+      select m.role, m.app_roles from auth.member m join auth."user" u on u.id = m.user_id join auth.organization o on o.id = m.organization_id
+      where u.email = 'dev@example.com' and o.slug = 'demo'`
     expect(row).toEqual({ role: 'admin', app_roles: ['moderator'] })
   })
 

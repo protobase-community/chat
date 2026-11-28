@@ -31,12 +31,12 @@ export const makeWorkspaces = async (databaseUrl: string, appUrl: string) => {
     dan: (await createUser(auth, dan)).id,
     eve: (await createUser(auth, eve)).id,
   }
-  await createOrganization(auth, { name: 'Northwind', slug: 'northwind', owner: ana.email })
+  const northwind = (await createOrganization(auth, { name: 'Northwind', slug: 'northwind', owner: ana.email })).organization
   await addMember(auth, { organization: 'northwind', email: ben.email, appRoles: ['participant'] })
   await addMember(auth, { organization: 'northwind', email: dan.email, appRoles: ['participant'] })
   await addMember(auth, { organization: 'northwind', email: eve.email, role: 'admin', appRoles: ['moderator'] })
   await addMember(auth, { organization: 'northwind', email: superuser.email })
-  await createOrganization(auth, { name: 'Southwind', slug: 'southwind', owner: cara.email })
+  const southwind = (await createOrganization(auth, { name: 'Southwind', slug: 'southwind', owner: cara.email })).organization
 
   // Each workspace's #general, by its slug.
   const sql = postgres(databaseUrl, { max: 1, onnotice: () => {} })
@@ -45,7 +45,10 @@ export const makeWorkspaces = async (databaseUrl: string, appUrl: string) => {
   await sql.end()
   const general = { northwind: rows.find((row) => row.slug === 'northwind')!.id, southwind: rows.find((row) => row.slug === 'southwind')!.id }
 
-  /** Signs `who` in with their password, as the sign-in page does, and answers the headers of their API requests. */
+  /**
+   * Signs `who` in with their password, as the sign-in page does, works in their workspace, as its switcher does, and
+   * answers the headers of their API requests.
+   */
   const as = async (who: typeof ana) => {
     const signIn = await fetch(`${appUrl}/api/auth/sign-in/email`, {
       method: 'POST',
@@ -54,6 +57,13 @@ export const makeWorkspaces = async (databaseUrl: string, appUrl: string) => {
     })
     if (!signIn.ok) throw new Error(`Signing in ${who.email} answered ${signIn.status}`)
     const cookie = signIn.headers.getSetCookie().map((each) => each.split(';')[0]).join('; ')
+    const workspace = who === cara ? southwind : northwind
+    const active = await fetch(`${appUrl}/api/auth/organization/switch`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', cookie, origin: appUrl },
+      body: JSON.stringify({ organizationId: workspace.id }),
+    })
+    if (!active.ok) throw new Error(`Working in ${workspace.slug} as ${who.email} answered ${active.status}`)
     const answer = await fetch(`${appUrl}/api/auth/token`, { headers: { cookie, origin: appUrl } })
     if (!answer.ok) throw new Error(`A token for ${who.email} answered ${answer.status}`)
     const { token } = (await answer.json()) as { token: string }
