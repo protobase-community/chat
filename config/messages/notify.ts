@@ -1,4 +1,4 @@
-import type { Db } from '@protobase/query'
+import { unscoped, type Db } from '@protobase/query'
 import { parseRoles, sendNotification, subscription } from '@protobase/server'
 import { roles } from '../roles'
 import { notificationOf } from './notification'
@@ -29,8 +29,9 @@ const conversationOf = async (db: Db, message: Record<string, unknown>): Promise
  */
 const readersAmong = async (db: Db, organizationId: string, people: string[]) => {
   if (people.length === 0) return []
+  // The subscription works in no organization, so it reads every workspace's members and keeps to this one itself.
   const rows = await db
-    .selectFrom('auth.member as member')
+    .selectFrom(unscoped('a new message tells members of its own workspace only, which the query names', 'auth.member').as('member'))
     .innerJoin('auth.user as user', 'user.id', 'member.user_id')
     .select(['user.id', 'user.role', 'member.app_roles'])
     .where('member.organization_id', '=', organizationId)
