@@ -71,6 +71,7 @@ app on it with `protobase dev`.
 | "Load earlier messages", keeping the reader's place | This version |
 | A composer of several lines: Enter sends, Shift+Enter adds a line | This version |
 | @mentions of the workspace's members, picked out in the message | This version |
+| Message text with markdown formatting, such as bold, lists and code, and clickable links | This version |
 | Private channels, which only their members see, read and post in; their creator adds and takes off members | This version |
 | Direct messages between two or more people, under "Direct messages" and named after the other people | This version |
 | Starting a direct message with the same people again opens the one they have | This version |
@@ -111,7 +112,7 @@ app on it with `protobase dev`.
 
 <gap>A thread's first message cannot be deleted while it has replies because keeping a deleted message's place in its thread is not implemented.</gap> Its replies go first, each deleted by its author or a moderator, so nobody's replies are deleted with it.
 
-<gap>A notification of a reply cannot open its thread because an address for a thread in its conversation's page is not implemented.</gap> It opens the conversation, where the thread's first message shows its replies.
+<gap>A notification of a reply cannot open its thread because the notification's link does not name the thread yet.</gap> It opens the conversation, where the thread's first message shows its replies.
 
 <gap>Mentioning someone in an edit cannot notify them because notifying of edited messages is not implemented.</gap> The edit does count in their unread mentions.
 
@@ -134,6 +135,8 @@ app on it with `protobase dev`.
 <gap>Someone who has the conversation open still gets a notification of its new messages because telling whether it is in front of them is not implemented.</gap>
 
 <gap>Someone signed in without a workspace cannot name one in a single step and land in its #general because Protobase's first-run step for organizations is not implemented.</gap> They see the Organizations page, which asks for a name and a slug, and open #general from the sidebar once it is made.
+
+<gap>The page's presence and the sidebar's unread marks cannot come from Protobase's server-driven UI, so the chat tracks them with its own code in `components/`, because Protobase's presence and unread marks in pages work only over a realtime relay, which the chat does not run yet.</gap>
 
 ## How Protobase builds it
 
@@ -178,7 +181,7 @@ app on it with `protobase dev`.
   `reply_count` and `last_reply_at`, so the change the live stream tells of that message brings its new count, and a
   message with replies is not deleted (its foreign keys answer `409`): nobody's replies go with it.
 - **Reactions are records.** `reactions` (`config/reactions/data.ts`) holds one person's emoji under a message, an enum
-  of six names that the chat draws from explicit labels (`components/emoji.ts`). `.parent((r) => r.message_id, 'read')`
+  of six names that the chat draws from explicit labels (`config/reactions/labels.ts`). `.parent((r) => r.message_id, 'read')`
   reads the message as the reactor would, its own conversation parents included, so only those who read a message
   react to it or see its reactions; a unique `(message_id, user_id, emoji)` refuses the same reaction twice with a
   `409`; the delete rule is `user_id = me`, and nobody updates one. Deleting a message deletes its reactions
@@ -209,27 +212,23 @@ app on it with `protobase dev`.
 - **Files are records too.** `attachments` (`config/attachments/data.ts`) holds one file of a message in a
   [file field](https://docs.protobase.net/reference/files/), `f.file().maxSize(20_000_000)`, a text column holding the
   stored file's URI in Protobase's `private` storage, with `.derive()` writing an image's width and height, which the
-  chat gives the preview so the thread does not jump as it loads. The chat uploads each file picked, pasted or dropped at once
-  (`client.upload`, `components/use-attachment-uploads.ts`), checking the size first so a larger file is refused with
-  its name, size and the limit, and sends the message and its files' upload tickets in one
-  [batch write](https://docs.protobase.net/reference/api/#batch-writes) (`use-conversation-messages.ts`).
+  conversation page gives the preview so the messages do not jump as it loads. The page uploads each file picked,
+  pasted or dropped at once, checking the size first so a larger file is refused with its name, size and the limit,
+  and sends the message and its files in one [batch write](https://docs.protobase.net/reference/api/#batch-writes).
   `.parent((r) => r.message_id, 'read')` reads the message as the reader would, its conversation included, so only
   those who read a message list its files or get their links, which the API signs for them; a download checks the link
   and that the row still holds the file. A composite foreign key to the message's `(id, organization_id, author_id)`
   lets only its author add files (`db/migrations/017_attachments.sql`). A message of files alone has a null `body`,
   and a check at commit refuses one with neither text nor files. The foreign key refuses deleting a message that has
-  files, so the chat deletes its files first in the same batch: a delete through the API also schedules each stored
+  files, so the page deletes its files first in the same batch: a delete through the API also schedules each stored
   file's deletion ([deleting files](https://docs.protobase.net/reference/files/#deleting-files)). Files show under the
-  message's text (`message-attachments.tsx`): an image as a preview linking to it, any other file as a link that
-  downloads it.
+  message's text: an image as a preview linking to it, any other file as a link that downloads it.
 - **Live updates.** `.live()` on channels, direct messages, messages and reactions, with the jobs schema and change capture that
   `protobase migration` wrote (`db/migrations/008_jobs.sql` and `009_changes.sql`), tells each open page which records
-  changed, only of its own workspace and never their values; the chat follows the stream with `client.live` and reads
-  the new messages through the API as its reader, so a private conversation's messages reach only its members ([live updates](https://docs.protobase.net/reference/live/)).
-  Every `client.live` of the UI's client, `useClient()`, shares one stream, so a page holds one of the browser's few
-  connections to the app for all of them, such as a conversation's messages, its open thread's replies and their
-  reactions. Attachments, written and deleted only with their message, are not live: the chat reads a message's
-  files when the message shows (`use-message-attachments.ts`).
+  changed, only of its own workspace and never their values; the conversation page reads the new messages through
+  the API as its reader, so a private conversation's messages reach only its members
+  ([live updates](https://docs.protobase.net/reference/live/)). Attachments, written and deleted only with their
+  message, are not live: the page reads a message's files when the message shows.
 - **Who is online or away.** Every record has a [channel](https://docs.protobase.net/reference/channels/), which
   whoever may read the record joins with `client.channel(resource, key)`: presence and short-lived broadcasts, never
   stored. A workspace's presence is on its own record, `workspaces` (`config/workspaces/data.ts`), one per workspace,
@@ -246,64 +245,44 @@ app on it with `protobase dev`.
   draws its own online or away dot from it, beside each member's status on the Members page. In the sidebar, the
   `directMessages` marks hook (`use-direct-message-marks.ts`) names a one-to-one direct message's other person, so
   the row shows their dot, busy or do not disturb mark and, on hover, status text; a group's row says its people's in
-  its tooltip. A direct message's header reads it with `usePresence()` and passes it to `StatusMark`
-  (`direct-message-people.tsx`).
+  its tooltip. A direct message's header shows it for each of its other people, as its `members` option
+  does.
 - **Setting a status.** `status: {}` in `protobase.config.ts` turns on Protobase's
   [status](https://docs.protobase.net/reference/status/), with the table `protobase migration` wrote
   (`db/migrations/021_status.sql`): "Set a status" in the profile menu, busy, do not disturb or a text, with when it
-  clears. `useMembers()` gives each member their status, read again every 15 seconds, which `StatusMark` draws beside
+  clears. `useMembers()` gives each member their status, read again every 15 seconds, which Protobase draws beside
   the name, the text in full for one person and on hover for several, and the Members page shows too. A status is the
   server's, so it shows while the person has no page open, and it clears itself at its time.
 - **Do not disturb.** The chat's notifications go through `sendNotification`, which pushes nothing to a person on do
   not disturb and still keeps the notification in their history, so the bell shows it: the chat has no code of its own
   for it.
-- **Who is typing.** A conversation's typing goes over the channel of its own record, `channels/<id>` or
-  `direct_messages/<id>` (`use-conversation-typing.ts`), so only those who read it hear it, a private channel's or a
-  direct message's members alone. The composer follows its box's input (`use-typing-input.ts`) and broadcasts
-  `typing` at most once every 3 seconds while its person writes, and once that they stopped when they empty the box or
-  send (`typing.ts`); a send the channel refuses is dropped. Each page shows a typer for 6 seconds after their last,
-  as "Name is typing…", "Name and Name are typing…" or "Several people are typing…" above the composer
-  (`typing-line.tsx`), leaving out the reader, and a reply's typing carries its thread, so the thread panel shows its
-  own. The channels of a page, its workspace's and its conversation's, share one WebSocket, so a page holds two
-  connections to the app however many channels and live views it has: the live stream and the channels' socket.
-- **The chat parts.** A channel's and a direct message's page are built from Protobase's
-  [chat parts](https://docs.protobase.net/reference/custom-components/#chat-parts): `ChatThread`, which keeps the
-  reader's place, goes to the end when they send (`followKey`) and offers earlier messages (`onLoadEarlier`);
-  `ChatMessage` with the author, avatar, time and `continued` for a run of one person's messages, and its `footer`
-  for "(edited)" and the reactions, drawn as `Button`s, with a bar of `Button`s over a message to react, reply in its
-  thread, edit and delete, `MentionBox` to edit it with its mentions, and `Dialog` to confirm a delete; `SidePanel`
-  for the open thread beside the conversation, covering the screen on a phone, with a `ChatThread` and `Composer` of
-  its own; `ChatDivider` with
-  `chatDayLabel` between messages that `sameChatDay` puts on different days; and `Composer`, whose `searchPeople` lists
-  the members to mention and whose `onSend(text, mentionIds)` gives the ids each message keeps in `mentions`, which the
-  unread counts and notifications read. The composer takes files in its own slots (`conversation-composer.tsx`): the
-  📎 button in `actions`, the tray of pending files with their progress or refusal in `attachments`, `onFiles` for an
-  image pasted with no text, such as a screenshot, or files dropped on it, which join the picked ones, and
-  `canSendEmpty` once the files are uploaded, so Enter sends them without text. `components/` holds the pages' own code: paging and following a conversation's
-  messages or a thread's replies, an edit read again and a delete taken out as the live stream tells of them
-  (`use-conversation-messages.ts`),
-  their reactions and files (`use-message-records.ts`), grouping them (`thread-rows.ts`) and drawing them
-  (`conversation-chat.tsx`), on a channel's page (`channel-chat.tsx`) and a direct message's
-  (`direct-message-chat.tsx`), exported from `protobase.ui.tsx`.
-- **Names from the workspace's members.** A message stores its author and mentions as user ids;
-  [`useMembers()`](https://docs.protobase.net/reference/custom-components/#members-names) gives the members of the
-  workspace, by name and without their addresses, for the authors, the mentions and the people `@` lists (at most 8).
-- **The chat is the conversation's page.** `.record({ component: ChannelChat })` in `config/channels/ui.ts`, and
-  `DirectMessageChat` in `config/direct_messages/ui.ts`, make a conversation's record page the chat, filling the area
-  beside the sidebar and under the top bar, where the page does not scroll: the messages scroll in `ChatThread` and the
-  composer stays at the bottom
-  ([full-area record pages](https://docs.protobase.net/reference/ui-config/#full-area-record-pages)). Its header's
-  **Details** (`conversation-header.tsx`) is an `AppLink` to the conversation's standard page, its address with
-  `standard: true`, read rather than a form with `.recordMode('read')`, where a channel's topic and who reads it, a
+- **Who is typing.** `typing: true` on a conversation page sends and shows typing over the channel of the
+  conversation's own record, `channels/<id>` or `direct_messages/<id>`, so only those who read it hear it, a private
+  channel's or a direct message's members alone: "Name is typing…" above the box, and a thread's own in its panel.
+- **The conversation page.** `.record({ conversation })` in `config/channels/ui.ts` and `config/direct_messages/ui.ts`
+  makes a conversation's record page Protobase's
+  [conversation page](https://docs.protobase.net/reference/ui-config/#conversation-pages), with no component of the
+  chat's own: the header, the messages under each author's name and time, day dividers, "Load earlier messages",
+  the box that sends one with its mentions and files, which stays at the bottom while the messages scroll, the
+  reactions, edits, deletes and threads, and the call. Both share their messages' options
+  (`config/messages/conversation.ts`): a channel adds its topic beside its name, a direct message its people, each
+  with their presence and status. `delete: { unless: 'reply_count > 0' }` offers no Delete on a thread's first
+  message while it has replies, as the database refuses it too. The page reads messages newest first by `sent_at`,
+  through an index of each conversation's flow (`db/migrations/028_messages_by_time.sql`).
+- **Names from the workspace's members.** A message stores its author and mentions as user ids, which the
+  conversation page names from the members of the workspace, without their addresses, as it does the people `@`
+  lists.
+- **Details.** The conversation page's header links to the conversation's standard page, its address with
+  `?standard=true`, read rather than a form with `.recordMode('read')`, where a channel's topic and who reads it, a
   private channel's members and a direct message's people show, and **Edit** changes the name, topic and members. `nav({ recent: { orderBy: 'name asc', limit: 20 } })` lists the
   channels under the sidebar's Channels entry
   ([recent records](https://docs.protobase.net/reference/sidebar/#recent-records)).
 - **"New message" in the sidebar.** `create: { label: 'New message' }` in the `nav` of `config/direct_messages/ui.ts`
   puts a link to the create form under the sidebar's Direct messages entry, for whoever may start one
   ([create link](https://docs.protobase.net/reference/sidebar/#create-link)).
-- **Each reader's name for a direct message.** `.titleFrom('memberNames', (r) => [r.member_ids])` in
-  `config/direct_messages/ui.ts` titles a direct message by the `memberNames` rule of `protobase.ui.tsx`
-  (`components/member-names.ts`): the names of the other people in it, so Maya sees "Sam Okafor" and Sam "Maya Jansen",
+- **Each reader's name for a direct message.** `.titleFrom('members', (r) => [r.member_ids])` in
+  `config/direct_messages/ui.ts` titles a direct message by Protobase's built-in `members` rule: the names of the other
+  people in it, so Maya sees "Sam Okafor" and Sam "Maya Jansen",
   in the sidebar, the breadcrumb and the page's heading
   ([titles per reader](https://docs.protobase.net/reference/ui-config/#titles-per-reader)).
 - **Unread, counted as each reader.** `read_positions` (`config/read_positions/data.ts`) keeps how far each person has
@@ -318,9 +297,9 @@ app on it with `protobase dev`.
   rules, so a private conversation someone is not in never counts, and it counts again whenever the live stream tells
   of a message or read position changed, so a deleted unread message drops out of the count. While it counts first, and
   after a count fails, it answers no marks (`follow-unread.ts`), so the sidebar lists the conversations unmarked: a
-  marks hook that throws stops the whole sidebar. A conversation's page reads its position on opening and draws
-  `ChatDivider tone="new"` above the first message after it by someone else, which `ChatThread` opens on; its
-  `onReadToEnd` moves the position to the newest message once the reader is at the end while the page shows.
+  marks hook that throws stops the whole sidebar. The conversation page's `readPosition` reads the position on
+  opening, opens on a "New messages" line above the first message after it by someone else, and moves the position
+  to the newest message once the reader is at the end.
 - **Notifications from the server.** `notifications: {}` in `protobase.config.ts` turns on Protobase's
   [notifications](https://docs.protobase.net/reference/notifications/): the bell in the top bar, each person's inbox, and
   push to the browsers they turn it on in through Web Push, with the tables `protobase migration` wrote
@@ -335,15 +314,15 @@ app on it with `protobase dev`.
 - **Calls on conversations.** `calls: { backend: { kind: 'peer' } }` in `protobase.config.ts` turns on Protobase's
   [calls](https://docs.protobase.net/reference/calls/) through its peer-to-peer media plugin, with no media server, and
   the `calls` schema `protobase migration` wrote (`db/migrations/023_calls.sql`). A call belongs to a channel or a
-  direct message, and `functions/call.ts`, at the address `config/conversations/call-address.ts` makes, lets its
-  caller in with `calls.join`: Protobase reads the conversation as the caller, so someone who cannot read it, such as
+  direct message, and its page's `call` names the function that lets its caller in with `calls.join`,
+  `functions/channel-call.ts` or `functions/direct-message-call.ts`, both `joinCall` of
+  `config/conversations/join-call.ts`: Protobase reads the conversation as the caller, so someone who cannot read it, such as
   someone outside a private channel, is refused with the `404` of a conversation that does not exist, and someone
   who no longer can is out of the call within a minute. The function joins each person by their account's name, which
   guests see them by, lets them send their microphone, camera and screen, and lets them share guest links. A direct
-  message's call rings its other people (`ring`) when that join starts it; a channel's rings no one. The header shows
-  Protobase's `CallMark` (`conversation-header.tsx`), which follows the conversation's calls over the channels'
-  socket the page already holds, so it opens no connection of its own, and the page shows Protobase's `RecordCall`
-  beside the messages while its address joins the call (`?call=join`, `conversation-call.tsx`). Ringing, its bell
+  message's call rings its other people (`ring`) when that join starts it; a channel's rings no one. The page's header
+  shows **Start call**, or "Call in progress · 2 · Join" while one goes on, and the page shows the call beside the
+  messages, above them on a phone, while its address joins the call (`?call=join`). Ringing, its bell
   entries, do not disturb, the guest links and their lobby page (`/-/call-guest`) are all Protobase's; a workspace's
   owner or admin turns guest links off for it on the organization page ("Guest links to calls"), which revokes every
   live one. A peer-to-peer call holds 8 people at most, since each browser sends its media to every other: it is made
@@ -381,7 +360,7 @@ GitHub repository**. Protobase keeps the app in sync with the repository and dep
 `config/<name>/data.ts` and its screens in `config/<name>/ui.ts`, all exported from `config/index.ts`, and
 `protobase dev` and `protobase serve` serve the API and the app from them.
 
-- Tested with Protobase **0.121.0**, and CI runs against it. The app is bundled: the `@protobase/*` packages are dev
+- Tested with Protobase **0.133.0**, and CI runs against it. The app is bundled: the `@protobase/*` packages are dev
   dependencies in the tilde range of that release, and dev, the build and the `db:*` scripts (`protobase run`) use the
   CLI's own copies, so a newer CLI within the range updates the app with no change to its files. `tsconfig.json`
   extends the `.protobase/tsconfig.json` that `protobase types` writes, so the editor types the CLI's copies too. To

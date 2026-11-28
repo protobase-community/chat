@@ -1,9 +1,12 @@
-import { useList, useMembers, usePresence, useSignedInUser, type RecordMark } from '@protobase/ui'
+import { useList, useMembers, usePresence, useSignedInUser, type Presence, type RecordMark } from '@protobase/ui'
 import { groupLabel } from './person-status'
 import { useUnreadMarks } from './use-unread-marks'
 
 /** As many direct messages as the sidebar lists (config/direct_messages/ui.ts), in its order. */
 const listed = { orderBy: 'created_at desc', pageSize: 20, fields: ['id', 'member_ids'] }
+
+/** Someone offline is told of as someone without a page open, by saying nothing of their activity. */
+const activityOf = (presence: Presence | undefined) => (presence === 'offline' ? undefined : presence)
 
 /**
  * The `directMessages` marks of the sidebar (protobase.ui.tsx): the `unread` marks, and the other people's presence and
@@ -31,7 +34,7 @@ export const useDirectMessageMarks = (resource: string) => {
       continue
     }
     const people = groupLabel(
-      others.map((id) => ({ name: member(id)?.name ?? '', activity: presence?.[id], status: member(id)?.status })),
+      others.map((id) => ({ name: member(id)?.name ?? '', activity: activityOf(presence?.[id]), status: member(id)?.status })),
       now,
     )
     if (people === undefined) continue

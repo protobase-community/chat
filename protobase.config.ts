@@ -8,8 +8,9 @@ export default defineConfig({
     // `admin` is the superuser, in every workspace; `participant` is held per workspace, given with each invitation, and
     // `moderator` too, which a workspace's creator holds and gives to its admins: it deletes anyone's messages there.
     roles: { admin: 'Superuser', participant: 'Participant', moderator: 'Moderator' },
-    // A workspace is an organization: people join one by invitation and see only its channels and messages.
-    organizations: { create: 'everyone' },
+    // A workspace is an organization: people join one by invitation and see only its channels and messages. `default`
+    // stands in for every workspace only if organizations are ever turned off; nobody is its member.
+    organizations: { enabled: true, create: 'everyone', default: { id: 'main', name: 'Main', slug: 'main' } },
   },
   // No PostgREST-compatible API: it runs under the tables' row-level security, which these tables do not have, rather
   // than the resources' access rules, so a key set in the environment must not turn it on.
@@ -19,7 +20,7 @@ export default defineConfig({
   // "Set a status" in the user menu: busy, do not disturb or a text such as "Having lunch", which the workspace sees beside
   // the person's name; do not disturb holds their push notifications, keeping them in the bell.
   status: {},
-  // Voice and video calls in channels and direct messages, joined through functions/call.ts, straight between the
+  // Voice and video calls in channels and direct messages, joined through functions/channel-call.ts and functions/direct-message-call.ts, straight between the
   // browsers: no media server. Without a STUN server in `iceServers`, only browsers on the same network connect.
   calls: { backend: { kind: 'peer' } },
 })

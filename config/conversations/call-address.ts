@@ -1,20 +1,13 @@
-/** The resources whose records have calls: channels and direct messages. */
-export const callResources = ['channels', 'direct_messages'] as const
-export type CallResource = (typeof callResources)[number]
+/** The API function that admits people to each conversation resource's call, which its conversation page names. */
+export const callFunctions = { channels: 'channel-call', direct_messages: 'direct-message-call' } as const
+export type CallResource = keyof typeof callFunctions
 
-/** The query parameters of a conversation's call socket, which functions/call.ts serves. */
-export const callParams = { resource: 'resource', key: 'key' } as const
+/** The query parameter of a call socket that holds its conversation's key, as the conversation page opens it. */
+export const callKeyParam = 'key'
 
-/** The call socket of the conversation `resource`/`key`, as `joinCall` and Protobase's call view open it. */
-export const callUrl = (resource: string, key: string) =>
-  `/api/functions/call?${new URLSearchParams({ [callParams.resource]: resource, [callParams.key]: key })}`
+/** The call socket of the conversation `resource`/`key`, as its conversation page opens it. */
+export const callUrl = (resource: CallResource, key: string) =>
+  `/api/functions/${callFunctions[resource]}?${new URLSearchParams({ [callKeyParam]: key })}`
 
-const isCallResource = (resource: string | null): resource is CallResource => callResources.some((each) => each === resource)
-
-/** The conversation a call socket's address names; undefined for a resource without calls or no key. */
-export const conversationOfCall = (url: URL) => {
-  const resource = url.searchParams.get(callParams.resource)
-  const key = url.searchParams.get(callParams.key)
-  if (!isCallResource(resource) || !key) return
-  return { resource, key }
-}
+/** The conversation key a call socket's address names; undefined without one. */
+export const keyOfCall = (url: URL) => url.searchParams.get(callKeyParam) || undefined
